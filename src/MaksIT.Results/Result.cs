@@ -15,6 +15,14 @@ namespace MaksIT.Results {
     }
 
     /// <summary>
+    /// Converts the current Result{T} to a non-generic Result.
+    /// </summary>
+    /// <returns>A non-generic Result object.</returns>
+    public Result ToResult() {
+      return new Result(IsSuccess, Messages, StatusCode);
+    }
+
+    /// <summary>
     /// Converts the current Result to an IActionResult.
     /// </summary>
     /// <returns>IActionResult that represents the HTTP response.</returns>
@@ -52,6 +60,8 @@ namespace MaksIT.Results {
       return new Result<U?>(newValueFunc(Value), IsSuccess, Messages, StatusCode);
     }
 
+
+
     /// <summary>
     /// Converts the current Result<T> to an IActionResult.
     /// </summary>
@@ -61,10 +71,10 @@ namespace MaksIT.Results {
         if (Value is not null) {
           return new ObjectResult(Value) { StatusCode = (int)StatusCode };
         }
-        return ToActionResult();
+        return base.ToActionResult();
       }
       else {
-        return ToActionResult();
+        return base.ToActionResult();
       }
     }
   }

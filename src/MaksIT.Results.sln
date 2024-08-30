@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34902.65
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaksIT.Results", "MaksIT.Results\MaksIT.Results.csproj", "{E947F5FC-8FD9-4F1E-AA5F-29FED95B5A2D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E947F5FC-8FD9-4F1E-AA5F-29FED95B5A2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E947F5FC-8FD9-4F1E-AA5F-29FED95B5A2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E947F5FC-8FD9-4F1E-AA5F-29FED95B5A2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E947F5FC-8FD9-4F1E-AA5F-29FED95B5A2D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C3627A51-0642-40DB-96BC-07C627FF8ACC}
+	EndGlobalSection
+EndGlobal

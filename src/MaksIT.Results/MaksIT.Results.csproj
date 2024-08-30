@@ -4,10 +4,24 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <RootNamespace>MaksIT.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 
+    <!-- NuGet package metadata -->
+    <PackageId>MaksIT.Results</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Maksym Sadovnychyy</Authors>
+    <Company>MAKS-IT</Company>
+    <Product>MaksIT.Results</Product>
+    <Description>Library for standardized result handling and seamless conversion to IActionResult in ASP.NET Core applications.</Description>
+    <PackageTags>aspnetcore;result;handling;api;dotnet</PackageTags>
+    <RepositoryUrl>https://github.com/MAKS-IT-COM/maksit-results</RepositoryUrl>
+    <License>MIT</License>
+    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <None Include="../../README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>
