@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34902.65
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaksIT.Results", "MaksIT.Results\MaksIT.Results.csproj", "{E947F5FC-8FD9-4F1E-AA5F-29FED95B5A2D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaksIT.Results.Tests", "..\MaksIT.Results.Tests\MaksIT.Results.Tests.csproj", "{BFD6A824-5A87-4C3A-9F95-32E318E1B683}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{E947F5FC-8FD9-4F1E-AA5F-29FED95B5A2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E947F5FC-8FD9-4F1E-AA5F-29FED95B5A2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E947F5FC-8FD9-4F1E-AA5F-29FED95B5A2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFD6A824-5A87-4C3A-9F95-32E318E1B683}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFD6A824-5A87-4C3A-9F95-32E318E1B683}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFD6A824-5A87-4C3A-9F95-32E318E1B683}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFD6A824-5A87-4C3A-9F95-32E318E1B683}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
