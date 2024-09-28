@@ -8,7 +8,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>MaksIT.Results</PackageId>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <Authors>Maksym Sadovnychyy</Authors>
     <Company>MAKS-IT</Company>
     <Product>MaksIT.Results</Product>
