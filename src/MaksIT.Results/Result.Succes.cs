@@ -10,7 +10,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 200 OK.
   /// </summary>
   public static Result Ok(string? message = null) =>
-    Ok(message != null ? [message] : null);
+    Ok(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the server returned the requested data.
@@ -25,7 +25,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 201 Created.
   /// </summary>
   public static Result Created(string? message = null) =>
-    Created(message != null ? [message] : null);
+    Created(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and a new resource was created.
@@ -40,7 +40,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 202 Accepted.
   /// </summary>
   public static Result Accepted(string? message = null) =>
-    Accepted(message != null ? [message] : null);
+    Accepted(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request has been accepted for processing, but the processing is not yet complete.
@@ -55,7 +55,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 203 Non-Authoritative Information.
   /// </summary>
   public static Result NonAuthoritativeInformation(string? message = null) =>
-    NonAuthoritativeInformation(message != null ? [message] : null);
+    NonAuthoritativeInformation(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful but the response contains metadata from a source other than the origin server.
@@ -70,7 +70,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 204 No Content.
   /// </summary>
   public static Result NoContent(string? message = null) =>
-    ResetContent(message != null ? [message] : null);
+    ResetContent(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful but there is no content to send in the response.
@@ -85,7 +85,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 205 Reset Content.
   /// </summary>
   public static Result ResetContent(string? message = null) =>
-    ResetContent(message != null ? [message] : null);
+    ResetContent(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful, but the user-agent should reset the document view that caused the request.
@@ -100,7 +100,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 206 Partial Content.
   /// </summary>
   public static Result PartialContent(string? message = null) =>
-    PartialContent(message != null ? [message] : null);
+    PartialContent(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the server is delivering only part of the resource due to a range header sent by the client.
@@ -115,7 +115,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 207 Multi-Status.
   /// </summary>
   public static Result MultiStatus(string? message = null) =>
-    MultiStatus(message != null ? [message] : null);
+    MultiStatus(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the response contains multiple status codes, typically used for WebDAV.
@@ -130,7 +130,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 208 Already Reported.
   /// </summary>
   public static Result AlreadyReported(string? message = null) =>
-    AlreadyReported(message != null ? [message] : null);
+    AlreadyReported(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the information has already been reported in a previous response.
@@ -145,7 +145,7 @@ public partial class Result {
   /// Corresponds to HTTP status code 226 IM Used.
   /// </summary>
   public static Result IMUsed(string? message = null) =>
-    IMUsed(message != null ? [message] : null);
+    IMUsed(messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the server fulfilled the request for the resource using the delta encoding method.
@@ -162,7 +162,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 200 OK.
   /// </summary>
   public static Result<T> Ok(T? value, string? message = null) =>
-    Ok(value, message != null ? [message] : null);
+    Ok(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the server returned the requested data.
@@ -177,7 +177,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 201 Created.
   /// </summary>
   public static Result<T> Created(T? value, string? message = null) =>
-    Created(value, message != null ? [message] : null);
+    Created(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and a new resource was created.
@@ -192,7 +192,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 202 Accepted.
   /// </summary>
   public static Result<T> Accepted(T? value, string? message = null) =>
-    Accepted(value, message != null ? [message] : null);
+    Accepted(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request has been accepted for processing, but the processing is not yet complete.
@@ -207,7 +207,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 203 Non-Authoritative Information.
   /// </summary>
   public static Result<T> NonAuthoritativeInformation(T? value, string? message = null) =>
-    NonAuthoritativeInformation(value, message != null ? [message] : null);
+    NonAuthoritativeInformation(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful but the response contains metadata from a source other than the origin server.
@@ -222,7 +222,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 204 No Content.
   /// </summary>
   public static Result<T> NoContent(T? value, string? message = null) =>
-    NoContent(value, message != null ? [message] : null);
+    NoContent(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful but there is no content to send in the response.
@@ -237,7 +237,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 205 Reset Content.
   /// </summary>
   public static Result<T> ResetContent(T? value, string? message = null) =>
-    ResetContent(value, message != null ? [message] : null);
+    ResetContent(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful, but the user-agent should reset the document view that caused the request.
@@ -252,7 +252,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 206 Partial Content.
   /// </summary>
   public static Result<T> PartialContent(T? value, string? message = null) =>
-    PartialContent(value, message != null ? [message] : null);
+    PartialContent(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the server is delivering only part of the resource due to a range header sent by the client.
@@ -267,7 +267,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 207 Multi-Status.
   /// </summary>
   public static Result<T> MultiStatus(T? value, string? message = null) =>
-    MultiStatus(value, message != null ? [message] : null);
+    MultiStatus(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the response contains multiple status codes, typically used for WebDAV.
@@ -282,7 +282,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 208 Already Reported.
   /// </summary>
   public static Result<T> AlreadyReported(T? value, string? message = null) =>
-    AlreadyReported(value, message != null ? [message] : null);
+    AlreadyReported(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the information has already been reported in a previous response.
@@ -297,7 +297,7 @@ public partial class Result<T> : Result {
   /// Corresponds to HTTP status code 226 IM Used.
   /// </summary>
   public static Result<T> IMUsed(T? value, string? message = null) =>
-    IMUsed(value, message != null ? [message] : null);
+    IMUsed(value, messages: message != null ? [message] : null);
 
   /// <summary>
   /// Returns a result indicating the request was successful and the server fulfilled the request for the resource using the delta encoding method.
