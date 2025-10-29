@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2024 Maksym Sadovnychyy (MAKS-IT)
+Copyright (c) 2024 - 2025 Maksym Sadovnychyy (MAKS-IT)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
