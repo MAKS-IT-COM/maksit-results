@@ -12,10 +12,20 @@ $nugetSource = "https://api.nuget.org/v3/index.json"
 $solutionDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectDir = "$solutionDir\MaksIT.Results"
 $outputDir = "$projectDir\bin\Release"
+$testProjectDir = "$solutionDir\MaksIT.Results.Tests"
 
 # Clean previous builds
 Write-Host "Cleaning previous builds..."
 dotnet clean $projectDir -c Release
+dotnet clean $testProjectDir -c Release
+
+# Run tests
+Write-Host "Running tests..."
+dotnet test $testProjectDir -c Release
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Tests failed. Aborting release process."
+    exit 1
+}
 
 # Build the project
 Write-Host "Building the project..."

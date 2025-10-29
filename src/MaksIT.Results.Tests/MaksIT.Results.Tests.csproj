@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\MaksIT.Results\MaksIT.Results.csproj" />
+    <ProjectReference Include="..\MaksIT.Results\MaksIT.Results.csproj" />
   </ItemGroup>
 
   <ItemGroup>
