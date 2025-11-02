@@ -1,137 +1,166 @@
-using Xunit;
 using System.Net;
-using MaksIT.Results;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using MaksIT.Results.Mvc;
 
-namespace MaksIT.Results.Tests {
-  public class ResultTests {
-    [Fact]
-    public void Result_Ok_ShouldReturnSuccess() {
-      // Arrange
-      var message = "Operation successful";
 
-      // Act
-      var result = Result.Ok(message);
+namespace MaksIT.Results.Tests;
+public class ResultTests {
+  [Fact]
+  public void Result_Ok_ShouldReturnSuccess() {
+    // Arrange
+    var message = "Operation successful";
 
-      // Assert
-      Assert.True(result.IsSuccess);
-      Assert.Contains(message, result.Messages);
-      Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-    }
+    // Act
+    var result = Result.Ok(message);
 
-    [Fact]
-    public void Result_BadRequest_ShouldReturnFailure() {
-      // Arrange
-      var message = "Invalid request";
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Contains(message, result.Messages);
+    Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+  }
 
-      // Act
-      var result = Result.BadRequest(message);
+  [Fact]
+  public void Result_BadRequest_ShouldReturnFailure() {
+    // Arrange
+    var message = "Invalid request";
 
-      // Assert
-      Assert.False(result.IsSuccess);
-      Assert.Contains(message, result.Messages);
-      Assert.Equal(HttpStatusCode.BadRequest, result.StatusCode);
-    }
+    // Act
+    var result = Result.BadRequest(message);
 
-    [Fact]
-    public void Result_Generic_Ok_ShouldReturnSuccessWithValue() {
-      // Arrange
-      var value = 42;
-      var message = "Operation successful";
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Contains(message, result.Messages);
+    Assert.Equal(HttpStatusCode.BadRequest, result.StatusCode);
+  }
 
-      // Act
-      var result = Result<int>.Ok(value, message);
+  [Fact]
+  public void Result_Generic_Ok_ShouldReturnSuccessWithValue() {
+    // Arrange
+    var value = 42;
+    var message = "Operation successful";
 
-      // Assert
-      Assert.True(result.IsSuccess);
-      Assert.Equal(value, result.Value);
-      Assert.Contains(message, result.Messages);
-      Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-    }
+    // Act
+    var result = Result<int>.Ok(value, message);
 
-    [Fact]
-    public void Result_Generic_NotFound_ShouldReturnFailureWithNullValue() {
-      // Arrange
-      var message = "Resource not found";
+    // Assert
+    Assert.True(result.IsSuccess);
+    Assert.Equal(value, result.Value);
+    Assert.Contains(message, result.Messages);
+    Assert.Equal(HttpStatusCode.OK, result.StatusCode);
+  }
 
-      // Act
-      var result = Result<string>.NotFound(null, message);
+  [Fact]
+  public void Result_Generic_NotFound_ShouldReturnFailureWithNullValue() {
+    // Arrange
+    var message = "Resource not found";
 
-      // Assert
-      Assert.False(result.IsSuccess);
-      Assert.Null(result.Value);
-      Assert.Contains(message, result.Messages);
-      Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
-    }
+    // Act
+    var result = Result<string>.NotFound(null, message);
 
-    [Fact]
-    public void Result_ToResultOfType_ShouldTransformValue() {
-      // Arrange
-      var initialValue = 42;
-      var transformedValue = "42";
-      var result = Result<int>.Ok(initialValue);
+    // Assert
+    Assert.False(result.IsSuccess);
+    Assert.Null(result.Value);
+    Assert.Contains(message, result.Messages);
+    Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
+  }
 
-      // Act
-      var transformedResult = result.ToResultOfType(value => value.ToString());
+  [Fact]
+  public void Result_ToResultOfType_ShouldTransformValue() {
+    // Arrange
+    var initialValue = 42;
+    var transformedValue = "42";
+    var result = Result<int>.Ok(initialValue);
 
-      // Assert
-      Assert.True(transformedResult.IsSuccess);
-      Assert.Equal(transformedValue, transformedResult.Value);
-      Assert.Equal(result.StatusCode, transformedResult.StatusCode);
-    }
+    // Act
+    var transformedResult = result.ToResultOfType(value => value.ToString());
 
-    [Fact]
-    public void Result_ToActionResult_ShouldReturnStatusCodeResult() {
-      // Arrange
-      var result = Result.Ok("Operation successful");
+    // Assert
+    Assert.True(transformedResult.IsSuccess);
+    Assert.Equal(transformedValue, transformedResult.Value);
+    Assert.Equal(result.StatusCode, transformedResult.StatusCode);
+  }
 
-      // Act
-      var actionResult = result.ToActionResult();
+  [Fact]
+  public void Result_ToActionResult_ShouldReturnStatusCodeResult() {
+    // Arrange
+    var result = Result.Ok("Operation successful");
 
-      // Assert
-      Assert.IsType<StatusCodeResult>(actionResult);
-      var statusCodeResult = actionResult as StatusCodeResult;
-      Assert.NotNull(statusCodeResult);
-      Assert.Equal((int)HttpStatusCode.OK, statusCodeResult.StatusCode);
-    }
+    // Act
+    var actionResult = result.ToActionResult();
 
-    [Fact]
-    public void Result_ToActionResult_ShouldReturnObjectResultForFailure() {
-      // Arrange
-      var errorMessage = "An error occurred";
-      var result = Result.BadRequest(errorMessage);
+    // Assert
+    Assert.IsType<StatusCodeResult>(actionResult);
+    var statusCodeResult = actionResult as StatusCodeResult;
+    Assert.NotNull(statusCodeResult);
+    Assert.Equal((int)HttpStatusCode.OK, statusCodeResult.StatusCode);
+  }
 
-      // Act
-      var actionResult = result.ToActionResult();
+  [Fact]
+  public void Result_ToActionResult_ShouldReturnObjectResultForFailure() {
+    // Arrange
+    var errorMessage = "An error occurred";
+    var result = Result.BadRequest(errorMessage);
 
-      // Assert
-      Assert.IsType<ObjectResult>(actionResult);
-      var objectResult = actionResult as ObjectResult;
-      Assert.NotNull(objectResult);
-      Assert.Equal((int)HttpStatusCode.BadRequest, objectResult.StatusCode);
-      Assert.IsType<ProblemDetails>(objectResult.Value);
-      var problemDetails = objectResult.Value as ProblemDetails;
-      Assert.NotNull(problemDetails);
-      Assert.Equal((int)HttpStatusCode.BadRequest, problemDetails.Status);
-      Assert.Equal("An error occurred", problemDetails.Title);
-      Assert.Equal(errorMessage, problemDetails.Detail);
-    }
+    // Act
+    var actionResult = result.ToActionResult();
 
-    [Fact]
-    public void Result_Generic_ToActionResult_ShouldReturnObjectResultWithValue() {
-      // Arrange
-      var value = new { Id = 1, Name = "Test" };
-      var result = Result<object>.Ok(value);
+    // Assert
+    Assert.IsType<ObjectResult>(actionResult);
+    var objectResult = actionResult as ObjectResult;
+    Assert.NotNull(objectResult);
+    Assert.Equal((int)HttpStatusCode.BadRequest, objectResult.StatusCode);
+    Assert.IsType<ProblemDetails>(objectResult.Value);
+    var problemDetails = objectResult.Value as ProblemDetails;
+    Assert.NotNull(problemDetails);
+    Assert.Equal((int)HttpStatusCode.BadRequest, problemDetails.Status);
+    Assert.Equal("An error occurred", problemDetails.Title);
+    Assert.Equal(errorMessage, problemDetails.Detail);
+  }
 
-      // Act
-      var actionResult = result.ToActionResult();
+  [Fact]
+  public void Result_Generic_ToActionResult_ShouldReturnObjectResultWithValue() {
+    // Arrange
+    var value = new { Id = 1, Name = "Test" };
+    var result = Result<object>.Ok(value);
 
-      // Assert
-      Assert.IsType<ObjectResult>(actionResult);
-      var objectResult = actionResult as ObjectResult;
-      Assert.NotNull(objectResult);
-      Assert.Equal((int)HttpStatusCode.OK, objectResult.StatusCode);
-      Assert.Equal(value, objectResult.Value);
-    }
+    // Act
+    var actionResult = result.ToActionResult();
+
+    // Assert
+    Assert.IsType<ObjectResult>(actionResult);
+    var objectResult = actionResult as ObjectResult;
+    Assert.NotNull(objectResult);
+    Assert.Equal((int)HttpStatusCode.OK, objectResult.StatusCode);
+    Assert.Equal(value, objectResult.Value);
+  }
+
+  [Fact]
+  public async Task ObjectResult_ShouldSerializeToCamelCaseJson() {
+    // Arrange
+    var testObject = new TestPascalCase { FirstName = "John", LastName = "Doe" };
+    var objectResult = new ObjectResult(testObject);
+    var context = new DefaultHttpContext();
+    var memoryStream = new MemoryStream();
+    context.Response.Body = memoryStream;
+    var actionContext = new ActionContext {
+      HttpContext = context
+    };
+
+    // Act
+    await objectResult.ExecuteResultAsync(actionContext);
+
+    // Assert
+    memoryStream.Seek(0, SeekOrigin.Begin);
+    var json = await new StreamReader(memoryStream).ReadToEndAsync();
+    Assert.Contains("\"firstName\"", json);
+    Assert.Contains("\"lastName\"", json);
+    Assert.DoesNotContain("\"FirstName\"", json);
+    Assert.DoesNotContain("\"LastName\"", json);
+  }
+
+  private class TestPascalCase {
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
   }
 }

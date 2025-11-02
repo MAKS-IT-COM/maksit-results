@@ -1,29 +1,34 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
+
 
 namespace MaksIT.Results.Mvc;
 
-public class ObjectResult : IActionResult {
-  public object? Value { get; }
-  public int? StatusCode { get; set; }
+public class ObjectResult(object? value) : IActionResult {
+  private static readonly JsonSerializerOptions _jsonSerializerOptions = new() {
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+  };
 
-  public ObjectResult(object? value) {
-    Value = value;
-  }
+  public object? Value { get; } = value;
+  public int? StatusCode { get; set; }
 
   public async Task ExecuteResultAsync(ActionContext context) {
     var response = context.HttpContext.Response;
+
     if (StatusCode.HasValue) {
       response.StatusCode = StatusCode.Value;
     }
+
     response.ContentType = "application/json";
+
     if (Value is not null) {
-      await JsonSerializer.SerializeAsync(response.Body, Value);
+      await JsonSerializer.SerializeAsync(
+        response.Body,
+        Value,
+        Value?.GetType() ?? typeof(object),
+        _jsonSerializerOptions
+      );
     }
   }
 }
