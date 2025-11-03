@@ -1,7 +1,5 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace MaksIT.Results.Mvc;
 
@@ -20,7 +18,13 @@ public class ObjectResult(object? value) : IActionResult {
       response.StatusCode = StatusCode.Value;
     }
 
-    response.ContentType = "application/json";
+    // Set content type based on value type
+    if (Value is ProblemDetails) {
+      response.ContentType = "application/problem+json";
+    }
+    else {
+      response.ContentType = "application/json";
+    }
 
     if (Value is not null) {
       await JsonSerializer.SerializeAsync(
