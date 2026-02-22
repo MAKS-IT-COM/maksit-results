@@ -1,8 +1,10 @@
-﻿using System.Net;
+using System.Net;
 
 namespace MaksIT.Results;
 
 public partial class Result {
+
+  #region Common Server Errors
 
   /// <summary>
   /// Returns a result indicating the server encountered an unexpected condition that prevented it from fulfilling the request.
@@ -52,6 +54,10 @@ public partial class Result {
     return new Result(false, [..messages], HttpStatusCode.HttpVersionNotSupported);
   }
 
+  #endregion
+
+  #region Extended Or Less Common Server Errors
+
   /// <summary>
   /// Returns a result indicating the server has an internal configuration error: the chosen variant resource is configured to engage in transparent content negotiation itself, and is therefore not a proper end point in the negotiation process.
   /// Corresponds to HTTP status code 506 Variant Also Negotiates.
@@ -91,9 +97,13 @@ public partial class Result {
   public static Result NetworkAuthenticationRequired(params string [] messages) {
     return new Result(false, [..messages], HttpStatusCode.NetworkAuthenticationRequired);
   }
+
+  #endregion
 }
 
 public partial class Result<T> : Result {
+
+  #region Common Server Errors
 
   /// <summary>
   /// Returns a result indicating the server encountered an unexpected condition that prevented it from fulfilling the request.
@@ -143,6 +153,10 @@ public partial class Result<T> : Result {
     return new Result<T>(value, false, [..messages], HttpStatusCode.HttpVersionNotSupported);
   }
 
+  #endregion
+
+  #region Extended Or Less Common Server Errors
+
   /// <summary>
   /// Returns a result indicating the server has an internal configuration error: the chosen variant resource is configured to engage in transparent content negotiation itself, and is therefore not a proper end point in the negotiation process.
   /// Corresponds to HTTP status code 506 Variant Also Negotiates.
@@ -182,4 +196,6 @@ public partial class Result<T> : Result {
   public static Result<T> NetworkAuthenticationRequired(T? value, params string [] messages) {
     return new Result<T>(value, false, [..messages], HttpStatusCode.NetworkAuthenticationRequired);
   }
+
+  #endregion
 }

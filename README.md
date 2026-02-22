@@ -1,182 +1,106 @@
 # MaksIT.Results
 
-`MaksIT.Results` is a powerful library designed to streamline the creation and management of result objects in your ASP.NET Core applications. It provides a standardized way to handle method results and easily convert them to `IActionResult` for HTTP responses, ensuring consistent and clear API responses.
+![Line Coverage](assets/badges/coverage-lines.svg) ![Branch Coverage](assets/badges/coverage-branches.svg) ![Method Coverage](assets/badges/coverage-methods.svg)
+
+`MaksIT.Results` is a .NET library for modeling operation outcomes as HTTP-aware result objects and converting them to `IActionResult` in ASP.NET Core.
 
 ## Features
 
-- **Standardized Result Handling**: Represent operation outcomes (success or failure) with appropriate HTTP status codes.
-- **Seamless Conversion to `IActionResult`**: Convert result objects to HTTP responses (`IActionResult`) with detailed problem descriptions.
-- **Flexible Result Types**: Supports both generic (`Result<T>`) and non-generic (`Result`) results for handling various scenarios.
-- **Predefined Results for All Standard HTTP Status Codes**: Includes predefined static methods to create results for all standard HTTP status codes (e.g., 200 OK, 404 Not Found, 500 Internal Server Error, etc.).
+- `Result` and `Result<T>` models with status code, success flag, and messages.
+- Static factory methods for common and extended HTTP status codes (1xx, 2xx, 3xx, 4xx, 5xx).
+- Built-in conversion to `IActionResult` via `ToActionResult()`.
+- RFC 7807-style error payloads for failures (`application/problem+json`).
+- Camel-case JSON serialization for response bodies.
 
 ## Installation
 
-To install `MaksIT.Results`, use the NuGet Package Manager:
+Package Manager:
 
 ```bash
 Install-Package MaksIT.Results
 ```
 
-## Usage example
+`dotnet` CLI:
 
-Below is an example demonstrating how to use `MaksIT.Results` in a typical ASP.NET Core application where a controller interacts with a service.
-
-### Step 1: Define and Register the Service
-
-Define a service that uses `MaksIT.Results` to return operation results, handling different result types with proper casting and conversion.
-
-```csharp
-public interface IVaultPersistanceService
-{
-    Result<Organization?> ReadOrganization(Guid organizationId);
-    Task<Result> DeleteOrganizationAsync(Guid organizationId);
-    // Additional method definitions...
-}
-
-public class VaultPersistanceService : IVaultPersistanceService
-{
-    // Inject dependencies as needed
-
-    public Result<Organization?> ReadOrganization(Guid organizationId)
-    {
-        var organizationResult = _organizationDataProvider.GetById(organizationId);
-        if (!organizationResult.IsSuccess || organizationResult.Value == null)
-        {
-            // Return a NotFound result when the organization isn't found
-            return Result<Organization?>.NotFound("Organization not found.");
-        }
-
-        var organization = organizationResult.Value;
-        var applicationDtos = new List<ApplicationDto>();
-
-        foreach (var applicationId in organization.Applications)
-        {
-            var applicationResult = _applicationDataProvider.GetById(applicationId);
-            if (!applicationResult.IsSuccess || applicationResult.Value == null)
-            {
-                // Transform the result from Result<Application?> to Result<Organization?>
-                // Ensuring the return type matches the method signature (Result<Organization?>)
-                return applicationResult.WithNewValue<Organization?>(_ => null);
-            }
-
-            var applicationDto = applicationResult.Value;
-            applicationDtos.Add(applicationDto);
-        }
-
-        // Return the final result with all applications loaded
-        return Result<Organization>.Ok(organization);
-    }
-
-    public async Task<Result> DeleteOrganizationAsync(Guid organizationId)
-    {
-        var organizationResult = await _organizationDataProvider.GetByIdAsync(organizationId);
-
-        if (!organizationResult.IsSuccess || organizationResult.Value == null)
-        {
-            // Convert Result<Organization?> to a non-generic Result
-            // The cast to (Result) allows for standardized response type
-            return (Result)organizationResult;
-        }
-
-        // Proceed with the deletion if the organization is found
-        var deleteResult = await _organizationDataProvider.DeleteByIdAsync(organizationId);
-
-        // Return the result of the delete operation directly
-        return deleteResult;
-    }
-}
+```bash
+dotnet add package MaksIT.Results
 ```
 
-**Key Points to Note:**
+## Target Framework
 
-1. **Handling Different Result Types:**
-   - The `ReadOrganization` method demonstrates handling a `Result<Organization?>` and transforming other types as needed using `WithNewValue<T>`. This ensures the method always returns the correct type.
-   
-2. **Casting from `Result<T>` to `Result`:**
-   - In `DeleteOrganizationAsync`, we cast `Result<Organization?>` to `Result` using `(Result)organizationResult`. This cast standardizes the result type, making it suitable for scenarios where only success or failure matters.
+- `.NET 10` (`net10.0`)
 
-Ensure this service is registered in your dependency injection container:
+## Quick Start
+
+### Create results
 
 ```csharp
-public void ConfigureServices(IServiceCollection services)
-{
-    services.AddScoped<IVaultPersistanceService, VaultPersistanceService>();
-    // Other service registrations...
-}
-```
-
-### Step 2: Use the Service in the Controller
-
-Inject the service into your controller and utilize `MaksIT.Results` to handle results efficiently:
-
-```csharp
-using Microsoft.AspNetCore.Mvc;
 using MaksIT.Results;
 
-public class OrganizationController : ControllerBase
-{
-    private readonly IVaultPersistanceService _vaultPersistanceService;
+Result ok = Result.Ok("Operation completed");
+Result failed = Result.BadRequest("Validation failed");
 
-    public OrganizationController(IVaultPersistanceService vaultPersistanceService)
-    {
-        _vaultPersistanceService = vaultPersistanceService;
-    }
-
-    [HttpGet("{organizationId}")]
-    public IActionResult GetOrganization(Guid organizationId)
-    {
-        var result = _vaultPersistanceService.ReadOrganization(organizationId);
-
-        // Convert the Result to IActionResult using ToActionResult()
-        return result.ToActionResult();
-    }
-
-    [HttpDelete("{organizationId}")]
-    public async Task<IActionResult> DeleteOrganization(Guid organizationId)
-    {
-        var result = await _vaultPersistanceService.DeleteOrganizationAsync(organizationId);
-
-        // Convert the Result to IActionResult using ToActionResult()
-        return result.ToActionResult();
-    }
-
-    // Additional actions...
-}
+Result<int> okWithValue = Result<int>.Ok(42, "Answer generated");
+Result<string?> notFound = Result<string?>.NotFound(null, "Entity not found");
 ```
 
-### Transforming Results
-
-You can also transform the result within the controller or service to adjust the output type as needed:
+### Convert between result types
 
 ```csharp
-public IActionResult TransformResultExample()
-{
-    var result = _vaultPersistanceService.ReadOrganization(Guid.NewGuid());
+using MaksIT.Results;
 
-    // Transform the result to a different type if needed
-    var transformedResult = result.WithNewValue<string>(org => (org?.Name ?? "").ToTitle());
+Result<int> source = Result<int>.Ok(42, "Value loaded");
 
-    return transformedResult.ToActionResult();
-}
+// Result<T> -> Result<U>
+Result<string?> mapped = source.ToResultOfType(v => v?.ToString());
+
+// Result<T> -> Result
+Result nonGeneric = source.ToResult();
 ```
 
-### Predefined Results for All Standard HTTP Status Codes
-
-`MaksIT.Results` provides methods to easily create results for all standard HTTP status codes, simplifying the handling of responses:
+### Use in an ASP.NET Core controller
 
 ```csharp
-return Result.Ok<string?>("Success").ToActionResult();                // 200 OK
-return Result.NotFound<string?>("Resource not found").ToActionResult(); // 404 Not Found
-return Result.InternalServerError<string?>("An unexpected error occurred").ToActionResult(); // 500 Internal Server Error
+using MaksIT.Results;
+using Microsoft.AspNetCore.Mvc;
+
+public sealed class UsersController : ControllerBase {
+  [HttpGet("{id:guid}")]
+  public IActionResult GetUser(Guid id) {
+    Result<UserDto?> result = id == Guid.Empty
+      ? Result<UserDto?>.BadRequest(null, "Invalid id")
+      : Result<UserDto?>.Ok(new UserDto(id, "maks"), "User loaded");
+
+    return result.ToActionResult();
+  }
+}
+
+public sealed record UserDto(Guid Id, string Name);
 ```
 
-### Conclusion
+## `ToActionResult()` Behavior
 
-`MaksIT.Results` is a powerful tool for simplifying the handling of operation results in ASP.NET Core applications. It provides a robust framework for standardized result handling, seamless conversion to `IActionResult`, and flexible result types to handle various scenarios. By adopting this library, developers can create more maintainable and readable code, ensuring consistent and clear HTTP responses.
+- `Result` success: returns status-code-only response.
+- `Result<T>` success with non-null `Value`: returns JSON body + status code.
+- Any failure: returns RFC 7807-style `ProblemDetails` JSON with:
+  - `status` = result status code
+  - `title` = `"An error occurred"`
+  - `detail` = joined `Messages`
+  - content type `application/problem+json`
 
-## Contribution
+## Status Code Factories
 
-Contributions to this project are welcome! Please fork the repository and submit a pull request with your changes. If you encounter any issues or have feature requests, feel free to open an issue on GitHub.
+- Informational: `Result.Continue(...)`, `Result.SwitchingProtocols(...)`, `Result.Processing(...)`, etc.
+- Success: `Result.Ok(...)`, `Result.Created(...)`, `Result.NoContent(...)`, etc.
+- Redirection: `Result.Found(...)`, `Result.PermanentRedirect(...)`, etc.
+- Client error: `Result.BadRequest(...)`, `Result.NotFound(...)`, `Result.TooManyRequests(...)`, etc.
+- Server error: `Result.InternalServerError(...)`, `Result.ServiceUnavailable(...)`, etc.
+
+Generic equivalents are available via `Result<T>`, for example `Result<MyDto>.Ok(value, "message")`.
+
+## Contributing
+
+See `CONTRIBUTING.md`.
 
 ## Contact
 
@@ -184,39 +108,6 @@ If you have any questions or need further assistance, feel free to reach out:
 
 - **Email**: [maksym.sadovnychyy@gmail.com](mailto:maksym.sadovnychyy@gmail.com)
 - **Reddit**: [MaksIT.Results: Streamline Your ASP.NET Core API Response Handling](https://www.reddit.com/r/MaksIT/comments/1f89ifn/maksitresults_streamline_your_aspnet_core_api/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
-
 ## License
 
-This project is licensed under the MIT License. See the full license text below.
-
----
-
-### MIT License
-
-```
-MIT License
-
-Copyright (c) 2024 Maksym Sadovnychyy (MAKS-IT)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-## Contact
-
-For any questions or inquiries, please reach out via GitHub or [email](mailto:maksym.sadovnychyy@gmail.com).
+See `LICENSE.md`.

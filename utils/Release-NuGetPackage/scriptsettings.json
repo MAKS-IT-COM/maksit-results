@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "Release NuGet Package Script Settings",
+  "description": "Configuration file for Release-NuGetPackage.ps1 script.",
+
+  "github": {
+    "enabled": true,
+    "githubToken": "GITHUB_MAKS_IT_COM",
+    "repository": "https://github.com/MAKS-IT-COM/maksit-results"
+  },
+
+  "nuget": {
+    "enabled": true,
+    "nugetApiKey": "NUGET_MAKS_IT",
+    "source": "https://api.nuget.org/v3/index.json"
+  },
+
+  "branches": {
+    "release": "main",
+    "dev": "dev"
+  },
+
+  "paths": {
+    "csprojPaths": [
+      "..\\..\\src\\MaksIT.Results\\MaksIT.Results.csproj"
+    ],
+    "testResultsDir": "..\\..\\testResults",
+    "stagingDir": "..\\..\\staging",
+    "releaseDir": "..\\..\\release",
+    "changelogPath": "..\\..\\CHANGELOG.md",
+    "testProject": "..\\..\\src\\MaksIT.Results.Tests"
+  },
+
+  "release": {
+    "zipNamePattern": "maksit.results-{version}.zip",
+    "releaseTitlePattern": "Release {version}"
+  },
+
+  "_comments": {
+    "github": {
+      "enabled": "Enable/disable GitHub release creation.",
+      "githubToken": "Environment variable name containing GitHub token used by gh CLI.",
+      "repository": "GitHub repository override used for releases (supports owner/repo or full GitHub URL)."
+    },
+    "nuget": {
+      "enabled": "Enable/disable NuGet publish step.",
+      "nugetApiKey": "Environment variable name containing NuGet API key.",
+      "source": "NuGet feed URL passed to dotnet nuget push."
+    },
+    "branches": {
+      "release": "Branch that requires tag and allows full publish flow.",
+      "dev": "Branch for local/dev build flow (no tag required)."
+    },
+    "paths": {
+      "csprojPaths": "List of project files used for version discovery and publish output.",
+      "testResultsDir": "Directory where test artifacts are written.",
+      "stagingDir": "Temporary staging directory before archive creation.",
+      "releaseDir": "Output directory for release archives and artifacts.",
+      "changelogPath": "Path to CHANGELOG.md used for version and release notes extraction.",
+      "testProject": "Test project path used by TestRunner."
+    },
+    "release": {
+      "zipNamePattern": "Archive name pattern. Supports {version} placeholder.",
+      "releaseTitlePattern": "GitHub release title pattern. Supports {version} placeholder."
+    }
+  }
+}

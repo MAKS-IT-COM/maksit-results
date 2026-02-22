@@ -1,9 +1,11 @@
-﻿using System.Net;
+using System.Net;
 
 
 namespace MaksIT.Results;
 
 public partial class Result {
+
+  #region Common Success Responses
 
   /// <summary>
   /// Returns a result indicating the request was successful and the server returned the requested data.
@@ -61,6 +63,10 @@ public partial class Result {
     return new Result(true, [..messages], HttpStatusCode.PartialContent);
   }
 
+  #endregion
+
+  #region Extended Or Less Common Success Responses
+
   /// <summary>
   /// Returns a result indicating the request was successful and the response contains multiple status codes, typically used for WebDAV.
   /// Corresponds to HTTP status code 207 Multi-Status.
@@ -84,8 +90,12 @@ public partial class Result {
   public static Result IMUsed(params string[] messages) {
     return new Result(true, [..messages], (HttpStatusCode)226); // 226 is the official status code for IM Used
   }
+
+  #endregion
 }
 public partial class Result<T> : Result {
+
+  #region Common Success Responses
 
   /// <summary>
   /// Returns a result indicating the request was successful and the server returned the requested data.
@@ -143,6 +153,10 @@ public partial class Result<T> : Result {
     return new Result<T>(value, true, [..messages], HttpStatusCode.PartialContent);
   }
 
+  #endregion
+
+  #region Extended Or Less Common Success Responses
+
   /// <summary>
   /// Returns a result indicating the request was successful and the response contains multiple status codes, typically used for WebDAV.
   /// Corresponds to HTTP status code 207 Multi-Status.
@@ -166,4 +180,6 @@ public partial class Result<T> : Result {
   public static Result<T> IMUsed(T? value, params string[] messages) {
     return new Result<T>(value, true, [..messages], (HttpStatusCode)226); // 226 is the official status code for IM Used
   }
+
+  #endregion
 }

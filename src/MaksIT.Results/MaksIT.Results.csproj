@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 
     <!-- NuGet package metadata -->
     <PackageId>MaksIT.Results</PackageId>
-    <Version>1.1.1</Version>
+    <Version>2.0.0</Version>
     <Authors>Maksym Sadovnychyy</Authors>
     <Company>MAKS-IT</Company>
     <Product>MaksIT.Results</Product>
@@ -22,11 +22,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="" />
-    <None Include="../../LICENSE.md" Pack="true" PackagePath="" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.3.9" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.3.0" />
+    <None Include="..\..\LICENSE.md" Pack="true" PackagePath="\" Link="LICENSE.md" />
+    <None Include="..\..\README.md"  Pack="true" PackagePath="\" Link="README.md" />
+    <None Include="..\..\CHANGELOG.md" Pack="true" PackagePath="\" Link="CHANGELOG.md" />
+
+    <None Include="..\..\assets\badges\**\*" Link="assets\badges\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

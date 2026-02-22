@@ -1,9 +1,11 @@
-﻿using System.Net;
+using System.Net;
 
 
 namespace MaksIT.Results;
 
 public partial class Result {
+
+  #region Common Informational Responses
 
   /// <summary>
   /// Returns a result indicating that the initial part of a request has been received and the client should continue with the request.
@@ -21,6 +23,10 @@ public partial class Result {
     return new Result(true, [..messages], HttpStatusCode.SwitchingProtocols);
   }
 
+  #endregion
+
+  #region Extended Or Less Common Informational Responses
+
   /// <summary>
   /// Returns a result indicating that the server has received and is processing the request, but no response is available yet.
   /// Corresponds to HTTP status code 102 Processing.
@@ -36,9 +42,13 @@ public partial class Result {
   public static Result EarlyHints(params string [] messages) {
     return new Result(true, [..messages], (HttpStatusCode)103); // Early Hints is not defined in HttpStatusCode enum, 103 is the official code
   }
+
+  #endregion
 }
 
 public partial class Result<T> : Result {
+
+  #region Common Informational Responses
 
   /// <summary>
   /// Returns a result indicating that the initial part of a request has been received and the client should continue with the request.
@@ -56,6 +66,10 @@ public partial class Result<T> : Result {
     return new Result<T>(value, true, [..messages], HttpStatusCode.SwitchingProtocols);
   }
 
+  #endregion
+
+  #region Extended Or Less Common Informational Responses
+
   /// <summary>
   /// Returns a result indicating that the server has received and is processing the request, but no response is available yet.
   /// Corresponds to HTTP status code 102 Processing.
@@ -71,5 +85,6 @@ public partial class Result<T> : Result {
   public static Result<T> EarlyHints(T? value, params string [] messages) {
     return new Result<T>(value, true, [..messages], (HttpStatusCode)103); // Early Hints is not defined in HttpStatusCode enum, 103 is the official code
   }
-}
 
+  #endregion
+}
