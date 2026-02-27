@@ -25,14 +25,13 @@
       "..\\..\\src\\MaksIT.Results\\MaksIT.Results.csproj"
     ],
     "testResultsDir": "..\\..\\testResults",
-    "stagingDir": "..\\..\\staging",
     "releaseDir": "..\\..\\release",
     "changelogPath": "..\\..\\CHANGELOG.md",
     "testProject": "..\\..\\src\\MaksIT.Results.Tests"
   },
 
   "release": {
-    "zipNamePattern": "maksit.results-{version}.zip",
+    "zipNamePattern": "maksit.dapr-{version}.zip",
     "releaseTitlePattern": "Release {version}"
   },
 
@@ -54,7 +53,6 @@
     "paths": {
       "csprojPaths": "List of project files used for version discovery and publish output.",
       "testResultsDir": "Directory where test artifacts are written.",
-      "stagingDir": "Temporary staging directory before archive creation.",
       "releaseDir": "Output directory for release archives and artifacts.",
       "changelogPath": "Path to CHANGELOG.md used for version and release notes extraction.",
       "testProject": "Test project path used by TestRunner."

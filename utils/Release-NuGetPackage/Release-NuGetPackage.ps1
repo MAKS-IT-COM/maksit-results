@@ -1,12 +1,11 @@
 <#
 .SYNOPSIS
-    Builds, tests, packs, and publishes MaksIT.Core to NuGet and GitHub releases.
+    Release script for MaksIT.Core NuGet package and GitHub release.
 
 .DESCRIPTION
     This script automates the release process for MaksIT.Core library.
     The script is IDEMPOTENT - you can safely re-run it if any step fails.
     It will skip already-completed steps (NuGet and GitHub) and only create what's missing.
-    GitHub repository target can be configured explicitly in scriptsettings.json.
     
     Features:
     - Validates environment and prerequisites
@@ -18,7 +17,7 @@
     - Generates test result artifacts (TRX format) and coverage reports
     - Displays test results with pass/fail counts and coverage percentage
     - Publishes to NuGet.org
-    - Creates a GitHub release with changelog and package assets
+    - Creates a GitHub release with changelog and NuGet package assets
     - Shows timing summary for all steps
 
 .REQUIREMENTS
@@ -105,6 +104,7 @@
 
 .CONFIGURATION
     All settings are stored in scriptsettings.json:
+    - qualityGates: Coverage threshold, vulnerability checks
     - packageSigning: Code signing certificate configuration
     - emailNotification: SMTP settings for release notifications
 
@@ -174,7 +174,6 @@ $settings = Get-ScriptSettings -ScriptDir $scriptDir
 $githubReleseEnabled = $settings.github.enabled
 $githubTokenEnvVar = $settings.github.githubToken
 $githubToken = [System.Environment]::GetEnvironmentVariable($githubTokenEnvVar)
-$githubRepositorySetting = $settings.github.repository
 
 # NuGet configuration
 $nugetReleseEnabled = $settings.nuget.enabled
@@ -214,12 +213,11 @@ if ($csprojPaths.Count -eq 0) {
 }
 
 $testResultsDir = [System.IO.Path]::GetFullPath((Join-Path $scriptDir $settings.paths.testResultsDir))
-$stagingDir = [System.IO.Path]::GetFullPath((Join-Path $scriptDir $settings.paths.stagingDir))
 $releaseDir = [System.IO.Path]::GetFullPath((Join-Path $scriptDir $settings.paths.releaseDir))
 $changelogPath = [System.IO.Path]::GetFullPath((Join-Path $scriptDir $settings.paths.changelogPath))
 $testProjectPath = [System.IO.Path]::GetFullPath((Join-Path $scriptDir $settings.paths.testProject))
 
-# Release naming patterns
+# Release naming pattern
 $zipNamePattern = $settings.release.zipNamePattern
 $releaseTitlePattern = $settings.release.releaseTitlePattern
 
@@ -247,21 +245,6 @@ function Get-CsprojPropertyValue {
     }
 
     return $null
-}
-
-# Helper: resolve output assembly name for published exe
-function Resolve-ProjectExeName {
-    param(
-        [Parameter(Mandatory=$true)][string]$projPath
-    )
-
-    [xml]$csproj = Get-Content $projPath
-    $assemblyName = Get-CsprojPropertyValue -csproj $csproj -propertyName "AssemblyName"
-    if ($assemblyName) {
-        return $assemblyName
-    }
-
-    return [System.IO.Path]::GetFileNameWithoutExtension($projPath)
 }
 
 # Helper: check for uncommitted changes
@@ -322,42 +305,6 @@ function Get-CsprojVersions {
     }
 
     return $projectVersions
-}
-
-# Helper: resolve GitHub repository (owner/repo) from settings override or remote URL
-function Resolve-GitHubRepository {
-    param(
-        [Parameter(Mandatory = $false)]
-        [string]$RepositorySetting
-    )
-
-    if (-not [string]::IsNullOrWhiteSpace($RepositorySetting)) {
-        $value = $RepositorySetting.Trim()
-
-        if ($value -match '^https?://github\.com/(?<owner>[^/]+)/(?<repo>[^/]+?)(?:\.git)?/?$') {
-            return "$($Matches['owner'])/$($Matches['repo'])"
-        }
-
-        if ($value -match '^(?<owner>[^/]+)/(?<repo>[^/]+)$') {
-            return "$($Matches['owner'])/$($Matches['repo'])"
-        }
-
-        Write-Error "Invalid github.repository format '$value'. Use 'owner/repo' or 'https://github.com/owner/repo'."
-        exit 1
-    }
-
-    $remoteUrl = git config --get remote.origin.url
-    if ($LASTEXITCODE -ne 0 -or -not $remoteUrl) {
-        Write-Error "Could not determine git remote origin URL. Configure github.repository in scriptsettings.json."
-        exit 1
-    }
-
-    if ($remoteUrl -match "[:/](?<owner>[^/]+)/(?<repo>[^/.]+)(\.git)?$") {
-        return "$($Matches['owner'])/$($Matches['repo'])"
-    }
-
-    Write-Error "Could not parse repository from remote URL: $remoteUrl. Configure github.repository in scriptsettings.json."
-    exit 1
 }
 
 #endregion
@@ -480,78 +427,18 @@ Write-Log -Level "INFO" -Message "  Method Coverage: $($testResult.MethodRate)%"
 
 #region Build And Publish
 
-# 7. Prepare staging directory
-Write-Log -Level "STEP" -Message "Preparing staging directory..."
-if (Test-Path $stagingDir) {
-    Remove-Item $stagingDir -Recurse -Force
-}
-
-New-Item -ItemType Directory -Path $stagingDir | Out-Null
-
-$binDir = Join-Path $stagingDir "bin"
-
-# 8. Publish the project to staging/bin
-
-Write-Log -Level "STEP" -Message "Publishing projects to bin folder..."
-$publishSuccess = $true
-$publishedProjects = @()
-
-foreach ($projPath in $csprojPaths) {
-    $projName = [System.IO.Path]::GetFileNameWithoutExtension($projPath)
-    $projBinDir = Join-Path $binDir $projName
-
-    dotnet publish $projPath -c Release -o $projBinDir
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "dotnet publish failed for $projName."
-        $publishSuccess = $false
-    }
-    else {
-        $exeBaseName = Resolve-ProjectExeName -projPath $projPath
-        $publishedProjects += [PSCustomObject]@{
-            ProjPath = $projPath
-            ProjName = $projName
-            BinDir = $projBinDir
-            ExeBaseName = $exeBaseName
-        }
-
-        Write-Log -Level "OK" -Message "  Published $projName successfully to: $projBinDir"
-    }
-}
-
-if (-not $publishSuccess) {
-    exit 1
-}
-
-
-# 12. Prepare release directory
+# 7. Prepare release directory
 if (!(Test-Path $releaseDir)) {
     New-Item -ItemType Directory -Path $releaseDir | Out-Null
 }
 
 
-# 13. Create zip file
-$zipName = $zipNamePattern
-$zipName = $zipName -replace '\{version\}', $version
-$zipPath = Join-Path $releaseDir $zipName
-
-if (Test-Path $zipPath) {
-    Remove-Item $zipPath -Force
-}
-
-Write-Log -Level "STEP" -Message "Creating archive $zipName..."
-Compress-Archive -Path "$stagingDir\*" -DestinationPath $zipPath -Force
-
-if (-not (Test-Path $zipPath)) {
-    Write-Error "Failed to create archive $zipPath"
-    exit 1
-}
-
-Write-Log -Level "OK" -Message "  Archive created: $zipPath"
-
-# 14. Pack NuGet package and resolve produced .nupkg file
+# 8. Pack NuGet package and resolve produced .nupkg/.snupkg files
 $packageProjectPath = $csprojPaths[0]
 Write-Log -Level "STEP" -Message "Packing NuGet package..."
-dotnet pack $packageProjectPath -c Release -o $releaseDir --nologo
+dotnet pack $packageProjectPath -c Release -o $releaseDir --nologo `
+    -p:IncludeSymbols=true `
+    -p:SymbolPackageFormat=snupkg
 if ($LASTEXITCODE -ne 0) {
     Write-Error "dotnet pack failed for $packageProjectPath."
     exit 1
@@ -573,7 +460,44 @@ if (-not $packageFile) {
 
 Write-Log -Level "OK" -Message "  Package ready: $($packageFile.FullName)"
 
-# 15. Extract release notes from CHANGELOG.md
+# Find the symbols package if available
+$symbolsPackageFile = Get-ChildItem -Path $releaseDir -Filter "*.snupkg" |
+    Where-Object { $_.Name -like "*$version*.snupkg" } |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 1
+
+if ($symbolsPackageFile) {
+    Write-Log -Level "OK" -Message "  Symbols package ready: $($symbolsPackageFile.FullName)"
+}
+else {
+    Write-Log -Level "WARN" -Message "  Symbols package (.snupkg) not found for version $version."
+}
+
+# 9. Create release archive with NuGet package artifacts
+Write-Log -Level "STEP" -Message "Creating release archive..."
+$resolvedZipNamePattern = if ([string]::IsNullOrWhiteSpace($zipNamePattern)) { "release-{version}.zip" } else { $zipNamePattern }
+$zipFileName = $resolvedZipNamePattern -replace '\{version\}', $version
+$zipPath = Join-Path $releaseDir $zipFileName
+
+if (Test-Path $zipPath) {
+    Remove-Item $zipPath -Force
+}
+
+$archiveArtifacts = @($packageFile.FullName)
+if ($symbolsPackageFile) {
+    $archiveArtifacts += $symbolsPackageFile.FullName
+}
+
+Compress-Archive -Path $archiveArtifacts -DestinationPath $zipPath -CompressionLevel Optimal -Force
+
+if (-not (Test-Path $zipPath)) {
+    Write-Error "Failed to create release archive at: $zipPath"
+    exit 1
+}
+
+Write-Log -Level "OK" -Message "  Release archive ready: $zipPath"
+
+# 10. Extract release notes from CHANGELOG.md
 Write-Log -Level "STEP" -Message "Extracting release notes..."
 $pattern = "(?ms)^##\s+v$([regex]::Escape($version))\b.*?(?=^##\s+v\d+\.\d+\.\d+|\Z)"
 $match = [regex]::Match($changelog, $pattern)
@@ -586,8 +510,37 @@ if (-not $match.Success) {
 $releaseNotes = $match.Value.Trim()
 Write-Log -Level "OK" -Message "  Release notes extracted."
 
-# 16. Resolve repository info for GitHub release
-$repo = Resolve-GitHubRepository -RepositorySetting $githubRepositorySetting
+# 11. Get repository info
+$configuredGithubRepository = $settings.github.repository
+$repoSource = $null
+
+if (-not [string]::IsNullOrWhiteSpace($configuredGithubRepository)) {
+    $repoSource = $configuredGithubRepository.Trim()
+}
+else {
+    $remoteUrl = git config --get remote.origin.url
+    if ($LASTEXITCODE -ne 0 -or -not $remoteUrl) {
+        Write-Error "Could not determine git remote origin URL."
+        exit 1
+    }
+
+    $repoSource = $remoteUrl
+}
+
+if ($repoSource -match "(?i)github\.com[:/](?<owner>[^/]+)/(?<repo>[^/.]+)(\.git)?$") {
+    $owner = $matches['owner']
+    $repoName = $matches['repo']
+    $repo = "$owner/$repoName"
+}
+elseif ($repoSource -match "^(?<owner>[^/]+)/(?<repo>[^/]+)$") {
+    $owner = $matches['owner']
+    $repoName = $matches['repo']
+    $repo = "$owner/$repoName"
+}
+else {
+    Write-Error "Could not parse GitHub repo from source: $repoSource. Use 'github.repository' in scriptsettings.json (owner/repo or github URL)."
+    exit 1
+}
 
 $releaseName = $releaseTitlePattern -replace '\{version\}', $version
 
@@ -596,7 +549,7 @@ Write-Log -Level "INFO" -Message "  Repository: $repo"
 Write-Log -Level "INFO" -Message "  Tag: $tag"
 Write-Log -Level "INFO" -Message "  Title: $releaseName"
 
-# 17. Check if tag is pushed to remote (skip on dev branch)
+# 12. Check if tag is pushed to remote (skip on dev branch)
 
 if (-not $isDevBranch) {
 
@@ -627,20 +580,45 @@ if (-not $isDevBranch) {
         }
 
         # gh release subcommands do not support custom auth headers.
-        # Scope GH_TOKEN to this block so all gh commands authenticate with the configured token.
+        # Scope GH_TOKEN to this block so commands authenticate with the configured token.
         $previousGhToken = $env:GH_TOKEN
         $env:GH_TOKEN = $githubToken
 
         try {
-            $authTest = & gh api user 2>$null
+            $ghVersion = & gh --version 2>&1
+            if ($ghVersion) {
+                Write-Log -Level "INFO" -Message "  gh version: $($ghVersion[0])"
+            }
 
-            if ($LASTEXITCODE -ne 0 -or -not $authTest) {
-                Write-Error "GitHub CLI authentication failed. GitHub token may be invalid or missing repo scope."
+            Write-Log -Level "INFO" -Message "  Auth env var: $githubTokenEnvVar (set)"
+            Write-Log -Level "INFO" -Message "  Target repository: $repo"
+
+            # Validate that the provided token can access the target repository.
+            $authArgs = @("api", "repos/$repo", "--jq", ".full_name")
+            Write-Log -Level "INFO" -Message "  Running: gh $($authArgs -join ' ')"
+            $authOutput = & gh @authArgs 2>&1
+            $authExitCode = $LASTEXITCODE
+
+            if ($authExitCode -ne 0 -or [string]::IsNullOrWhiteSpace(($authOutput | Out-String))) {
+                Write-Log -Level "WARN" -Message "  gh auth check failed (exit code: $authExitCode)."
+                if ($authOutput) {
+                    Write-Log -Level "WARN" -Message "  gh api output:"
+                    $authOutput | ForEach-Object { Write-Log -Level "WARN" -Message "    $_" }
+                }
+
+                $authStatus = & gh auth status --hostname github.com 2>&1
+                if ($authStatus) {
+                    Write-Log -Level "WARN" -Message "  gh auth status output:"
+                    $authStatus | ForEach-Object { Write-Log -Level "WARN" -Message "    $_" }
+                }
+
+                Write-Error "GitHub CLI authentication failed for repository '$repo'. Ensure '$githubTokenEnvVar' is valid and has access to this repository."
                 exit 1
             }
-            Write-Log -Level "OK" -Message "  GitHub CLI authenticated."
 
-            # 18. Create or update GitHub release
+            Write-Log -Level "OK" -Message "  GitHub token validated for repository: $($authOutput | Select-Object -First 1)"
+
+            # 13. Create or update GitHub release
             Write-Log -Level "STEP" -Message "Creating GitHub release..."
 
             # Check if release already exists
@@ -665,8 +643,12 @@ if (-not $isDevBranch) {
             $notesFilePath = Join-Path $releaseDir "release-notes-temp.md"
             [System.IO.File]::WriteAllText($notesFilePath, $releaseNotes, [System.Text.UTF8Encoding]::new($false))
 
-            $createReleaseArgs = @(
-                "release", "create", $tag, $zipPath
+            $releaseAssets = @($packageFile.FullName)
+            if ($symbolsPackageFile) {
+                $releaseAssets += $symbolsPackageFile.FullName
+            }
+
+            $createReleaseArgs = @("release", "create", $tag) + $releaseAssets + @(
                 "--repo", $repo
                 "--title", $releaseName
                 "--notes-file", $notesFilePath
@@ -726,11 +708,6 @@ else {
 #endregion
 
 #region Cleanup
-if (Test-Path $stagingDir) {
-    Remove-Item $stagingDir -Recurse -Force
-    Write-Log -Level "INFO" -Message "  Cleaned up staging directory."
-}
-
 if (Test-Path $testResultsDir) {
     Remove-Item $testResultsDir -Recurse -Force
     Write-Log -Level "INFO" -Message "  Cleaned up test results directory."

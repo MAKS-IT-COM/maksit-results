@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Amends the latest tagged commit and force-pushes updated branch and tag.
+    Amends the latest commit, recreates its associated tag, and force pushes both to remote.
 
 .DESCRIPTION
     This script performs the following operations:
@@ -66,6 +66,29 @@ Import-Module $gitToolsModulePath -Force
 
 #endregion
 
+#region Helpers
+
+function Select-PreferredHeadTag {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]]$Tags
+    )
+
+    # Pick the latest tag on HEAD by git's own ordering (no tag-name parsing assumptions).
+    $ordered = (& git tag --points-at HEAD --sort=-creatordate 2>$null)
+    if ($LASTEXITCODE -eq 0 -and $ordered) {
+        $orderedTags = @($ordered | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { $_.Trim() })
+        if ($orderedTags.Count -gt 0) {
+            return $orderedTags[0]
+        }
+    }
+
+    # Fallback: keep script functional even if sorting is unavailable.
+    return $Tags[0]
+}
+
+#endregion
+
 #region Load Settings
 
 $settings = Get-ScriptSettings -ScriptDir $scriptDir
@@ -110,14 +133,17 @@ Write-Log -Level "INFO" -Message "Commit: $CommitHash - $CommitMessage"
 
 # 3. Ensure HEAD has at least one tag
 Write-LogStep "Finding tag on last commit..."
-$tags = @(Get-HeadTags)
+$tags = Get-HeadTags
 if ($tags.Count -eq 0) {
     Write-Error "No tag found on the last commit ($CommitHash). This script requires the last commit to have an associated tag."
     exit 1
 }
 
-# If multiple tags exist, use the first one returned by git.
-$TagName = $tags[0]
+# If multiple tags exist, choose the latest one on HEAD by git ordering.
+if ($tags.Count -gt 1) {
+    Write-Log -Level "WARN" -Message "Multiple tags found on HEAD: $($tags -join ', ')"
+}
+$TagName = Select-PreferredHeadTag -Tags $tags
 Write-Log -Level "OK" -Message "Found tag: $TagName"
 
 # 4. Inspect pending changes before amend

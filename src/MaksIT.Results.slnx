@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MaksIT.Results.Tests/MaksIT.Results.Tests.csproj" />
+  <Project Path="MaksIT.Results/MaksIT.Results.csproj" />
+</Solution>

@@ -108,6 +108,7 @@ If you have any questions or need further assistance, feel free to reach out:
 
 - **Email**: [maksym.sadovnychyy@gmail.com](mailto:maksym.sadovnychyy@gmail.com)
 - **Reddit**: [MaksIT.Results: Streamline Your ASP.NET Core API Response Handling](https://www.reddit.com/r/MaksIT/comments/1f89ifn/maksitresults_streamline_your_aspnet_core_api/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
+
 ## License
 
 See `LICENSE.md`.
