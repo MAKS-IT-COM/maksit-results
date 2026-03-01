@@ -1,3 +1,6 @@
+#requires -Version 7.0
+#requires -PSEdition Core
+
 <#
 .SYNOPSIS
     PowerShell module for running tests with code coverage.
@@ -8,7 +11,7 @@
 
 .NOTES
     Author: MaksIT
-    Usage: Import-Module .\TestRunner.psm1
+    Usage: pwsh -Command "Import-Module .\TestRunner.psm1"
 #>
 
 function Import-LoggingModuleInternal {

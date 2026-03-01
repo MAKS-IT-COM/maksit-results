@@ -1,3 +1,6 @@
+#requires -Version 7.0
+#requires -PSEdition Core
+
 function Get-LogTimestampInternal {
     return (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
 }

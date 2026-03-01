@@ -1,3 +1,6 @@
+#requires -Version 7.0
+#requires -PSEdition Core
+
 <#
 .SYNOPSIS
     Amends the latest commit, recreates its associated tag, and force pushes both to remote.
@@ -16,10 +19,10 @@
     If specified, shows what would be done without making changes.
 
 .EXAMPLE
-    .\Force-AmendTaggedCommit.ps1
+    pwsh -File .\Force-AmendTaggedCommit.ps1
     
 .EXAMPLE
-    .\Force-AmendTaggedCommit.ps1 -DryRun
+    pwsh -File .\Force-AmendTaggedCommit.ps1 -DryRun
 
 .NOTES
     CONFIGURATION (scriptsettings.json):

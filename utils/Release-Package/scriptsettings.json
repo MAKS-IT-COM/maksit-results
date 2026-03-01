@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "Release Package Script Settings",
+  "description": "Configuration file for Release-Package.ps1 script.",
+  "Plugins": [
+    {
+      "Name": "DotNetTest",
+      "Stage": "Test",
+      "Enabled": true,
+      "project": "..\\..\\src\\MaksIT.Results.Tests",
+      "resultsDir": "..\\..\\testResults"
+    },
+    {
+      "Name": "QualityGate",
+      "Stage": "QualityGate",
+      "Enabled": true,
+      "coverageThreshold": 0,
+      "failOnVulnerabilities": true
+    },
+    {
+      "Name": "DotNetPack",
+      "Stage": "Build",
+      "Enabled": true,
+      "projectFiles": [
+        "..\\..\\src\\MaksIT.Results\\MaksIT.Results.csproj"
+      ],
+      "artifactsDir": "..\\..\\release"
+    },
+    {
+      "Name": "CreateArchive",
+      "Stage": "Build",
+      "Enabled": true,
+      "zipNamePattern": "maksit.results-{version}.zip"
+    },
+    {
+      "Name": "GitHub",
+      "Stage": "Release",
+      "Enabled": true,
+      "branches": [
+        "main"
+      ],
+      "githubToken": "GITHUB_MAKS_IT_COM",
+      "repository": "https://github.com/MAKS-IT-COM/maksit-results",
+      "releaseNotesFile": "..\\..\\CHANGELOG.md",
+      "releaseTitlePattern": "Release {version}"
+    },
+    {
+      "Name": "NuGet",
+      "Stage": "Release",
+      "Enabled": true,
+      "branches": [
+        "main"
+      ],
+      "nugetApiKey": "NUGET_MAKS_IT",
+      "source": "https://api.nuget.org/v3/index.json"
+    },
+    {
+      "Name": "CleanupArtifacts",
+      "Stage": "Release",
+      "Enabled": true,
+      "includePatterns": [
+        "*"
+      ],
+      "excludePatterns": [
+        "*.zip"
+      ]
+    }
+  ],
+  "_comments": {
+    "Plugins": {
+      "Name": "Plugin module file name in CorePlugins (for example, DotNetPack -> CorePlugins/DotNetPack.psm1).",
+      "Stage": "Execution phase. Supported values are Test, QualityGate, Build, and Release.",
+      "Enabled": "If true, the plugin is imported and Invoke-Plugin is called in the configured order.",
+      "branches": "Used only by publish plugins such as GitHub and NuGet. When the current branch is not listed, publishing is skipped.",
+      "project": "DotNetTest plugin only. Path to the test project directory, relative to the script folder.",
+      "resultsDir": "DotNetTest plugin only. Optional results directory path, relative to the script folder.",
+      "projectFiles": "DotNetPack, DotNetPublish, or another producer plugin can define the project files used for version discovery and artifact creation.",
+      "artifactsDir": "DotNetPack, DotNetPublish, or another producer plugin can define the artifacts output directory, relative to the script folder.",
+      "coverageThreshold": "QualityGate plugin only. Coverage threshold percent (0 disables threshold check).",
+      "failOnVulnerabilities": "QualityGate plugin only. If true, fail when vulnerable packages are detected.",
+      "githubToken": "GitHub plugin only. Environment variable name containing the GitHub token used by gh CLI.",
+      "repository": "GitHub plugin only. Optional owner/repo or GitHub remote URL. Leave empty to use remote.origin.url.",
+      "releaseNotesFile": "GitHub plugin (or another notes consumer plugin) can define the release notes source file, relative to the script folder.",
+      "releaseTitlePattern": "GitHub plugin only. Release title pattern. Supports {version} placeholder.",
+      "zipNamePattern": "CreateArchive plugin only. Archive name pattern for packaged release assets. Supports {version} placeholder.",
+      "nugetApiKey": "NuGet plugin only. Environment variable name containing the NuGet API key.",
+      "source": "NuGet plugin only. Feed URL passed to dotnet nuget push.",
+      "includePatterns": "CleanupArtifacts plugin only. File patterns to remove from artifactsDir (for example ['*.nupkg','*.snupkg']).",
+      "excludePatterns": "CleanupArtifacts plugin only. File patterns to keep even when includePatterns match (for example ['*.zip'])."
+    }
+  }
+}

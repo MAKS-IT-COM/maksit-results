@@ -1,3 +1,6 @@
+#requires -Version 7.0
+#requires -PSEdition Core
+
 #
 # Shared Git helpers for utility scripts.
 #
