@@ -155,7 +155,8 @@ else {
 }
 
 if (-not $releaseStageInitialized) {
-    Write-Log -Level "WARN" -Message "No release plugins executed for branch '$($engineContext.CurrentBranch)'."
+    $noReleasePluginsLogLevel = if ($engineContext.IsNonReleaseBranch) { "INFO" } else { "WARN" }
+    Write-Log -Level $noReleasePluginsLogLevel -Message "No release plugins executed for branch '$($engineContext.CurrentBranch)'."
 }
 
 #endregion
@@ -174,7 +175,7 @@ Write-Log -Level "INFO" -Message "Artifacts location: $($engineContext.Artifacts
 
 if ($engineContext.IsNonReleaseBranch) {
     $preferredReleaseBranch = Get-PreferredReleaseBranch -EngineContext $engineContext
-    Write-Log -Level "WARN" -Message "To execute release-stage plugins, rerun from an allowed release branch such as '$preferredReleaseBranch'."
+    Write-Log -Level "INFO" -Message "To execute release-stage plugins, rerun from an allowed release branch such as '$preferredReleaseBranch'."
 }
 
 #endregion

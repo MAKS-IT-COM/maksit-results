@@ -282,14 +282,14 @@ function Test-PluginRunnable {
         $allowedBranches = Get-PluginBranches -Plugin $Plugin
         if ($allowedBranches.Count -eq 0) {
             if ($WriteLogs) {
-                Write-Log -Level "WARN" -Message "Skipping plugin '$($Plugin.Name)' because no publish branches are configured."
+                Write-Log -Level "INFO" -Message "Skipping plugin '$($Plugin.Name)' because no publish branches are configured."
             }
             return $false
         }
 
         if (-not ($allowedBranches -contains $SharedSettings.CurrentBranch)) {
             if ($WriteLogs) {
-                Write-Log -Level "WARN" -Message "Skipping plugin '$($Plugin.Name)' on branch '$($SharedSettings.CurrentBranch)'."
+                Write-Log -Level "INFO" -Message "Skipping plugin '$($Plugin.Name)' on branch '$($SharedSettings.CurrentBranch)'."
             }
             return $false
         }
