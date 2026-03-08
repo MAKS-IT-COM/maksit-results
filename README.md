@@ -10,7 +10,7 @@
 - Static factory methods for common and extended HTTP status codes (1xx, 2xx, 3xx, 4xx, 5xx).
 - Built-in conversion to `IActionResult` via `ToActionResult()`.
 - RFC 7807-style error payloads for failures (`application/problem+json`).
-- Camel-case JSON serialization for response bodies.
+- Camel-case JSON serialization for response bodies; respects app-configured `JsonSerializerOptions` (e.g. `AddJsonOptions` with `DefaultIgnoreCondition.WhenWritingNull`).
 
 ## Installation
 
@@ -87,6 +87,19 @@ public sealed record UserDto(Guid Id, string Name);
   - `title` = `"An error occurred"`
   - `detail` = joined `Messages`
   - content type `application/problem+json`
+
+## JSON options
+
+`ObjectResult` uses the same `JsonSerializerOptions` as your app when you configure them with `AddJsonOptions`:
+
+```csharp
+builder.Services.AddControllers()
+  .AddJsonOptions(options => {
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+  });
+```
+
+If no options are registered, a default (camel-case) serializer is used.
 
 ## Status Code Factories
 

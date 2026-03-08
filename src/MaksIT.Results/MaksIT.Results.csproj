@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,7 +8,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>MaksIT.Results</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Authors>Maksym Sadovnychyy</Authors>
     <Company>MAKS-IT</Company>
     <Product>MaksIT.Results</Product>
@@ -23,11 +23,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.3.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="..\..\LICENSE.md" Pack="true" PackagePath="\" Link="LICENSE.md" />
-    <None Include="..\..\README.md"  Pack="true" PackagePath="\" Link="README.md" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" Link="README.md" />
     <None Include="..\..\CHANGELOG.md" Pack="true" PackagePath="\" Link="CHANGELOG.md" />
 
     <None Include="..\..\assets\badges\**\*" Link="assets\badges\%(RecursiveDir)%(Filename)%(Extension)">

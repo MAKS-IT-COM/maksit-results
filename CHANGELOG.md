@@ -1,9 +1,19 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## v2.0.1 - 2026-03-08
+
+### Added
+- Tests for `AddJsonOptions` integration: `ObjectResult` respects `JsonSerializerOptions.DefaultIgnoreCondition` (e.g. `WhenWritingNull`) when configured via `AddControllers().AddJsonOptions(...)`.
+- Test project reorganized to mirror library structure: `ResultTests`, `ResultToActionResultTests`, and `Mvc/ObjectResultTests`.
+
+### Fixed
+- `ObjectResult` now uses the app-configured JSON options from `IOptions<JsonOptions>` when serializing response bodies; previously it always used internal defaults.
+- `ObjectResult` no longer throws when `HttpContext.RequestServices` is null (e.g. in unit tests without a service provider).
 
 ## v2.0.0 - 2026-02-22
 

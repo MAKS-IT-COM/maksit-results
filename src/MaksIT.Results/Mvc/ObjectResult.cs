@@ -1,5 +1,7 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace MaksIT.Results.Mvc;
 
@@ -13,6 +15,10 @@ public class ObjectResult(object? value) : IActionResult {
 
   public async Task ExecuteResultAsync(ActionContext context) {
     var response = context.HttpContext.Response;
+
+    // Prefer app-configured JSON options (from AddJsonOptions), fall back to default
+    var jsonOptions = context.HttpContext.RequestServices?.GetService<IOptions<JsonOptions>>()?.Value?.JsonSerializerOptions
+      ?? _jsonSerializerOptions;
 
     if (StatusCode.HasValue) {
       response.StatusCode = StatusCode.Value;
@@ -31,7 +37,7 @@ public class ObjectResult(object? value) : IActionResult {
         response.Body,
         Value,
         Value?.GetType() ?? typeof(object),
-        _jsonSerializerOptions
+        jsonOptions
       );
     }
   }
