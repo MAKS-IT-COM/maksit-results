@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "title": "Release Package Script Settings",
+  "description": "Invoke-ReleasePackage.ps1 plugin settings. Place ReleasePublishGuard before GitHub/DotNetNuGet/DotNetDockerPush/DotNetHelmPush/NpmPublish; use its branches and tag rules. Publish plugins omit per-plugin branches. Semver comes from DotNetReleaseVersion (projectFiles).",
+  "plugins": [
+    {
+      "name": "DotNetReleaseVersion",
+      "stageLabel": "build",
+      "enabled": true,
+      "projectFiles": [
+        "..\\..\\..\\src\\MaksIT.Results\\MaksIT.Results.csproj"
+      ]
+    },
+    {
+      "name": "DotNetTest",
+      "stageLabel": "test",
+      "enabled": true,
+      "project": "..\\..\\..\\src\\MaksIT.Results.Tests",
+      "resultsDir": "..\\..\\..\\testResults"
+    },
+    {
+      "name": "QualityGate",
+      "stageLabel": "qualityGate",
+      "enabled": true,
+      "coverageThreshold": 0,
+      "failOnVulnerabilities": true,
+      "projectFiles": [
+        "..\\..\\..\\src\\MaksIT.Results\\MaksIT.Results.csproj"
+      ]
+    },
+    {
+      "name": "DotNetPack",
+      "stageLabel": "build",
+      "enabled": true,
+      "projectFiles": [
+        "..\\..\\..\\src\\MaksIT.Results\\MaksIT.Results.csproj"
+      ],
+      "artifactsDir": "..\\..\\..\\release"
+    },
+    {
+      "name": "DotNetCreateArchive",
+      "stageLabel": "build",
+      "enabled": true,
+      "zipNamePattern": "maksit.results-{version}.zip"
+    },
+    {
+      "name": "ReleasePublishGuard",
+      "stageLabel": "release",
+      "enabled": true,
+      "branches": [
+        "main"
+      ],
+      "requireExactTagOnHead": true,
+      "tagVersionMustMatchDotNetRelease": true,
+      "whenRequirementsNotMet": "skip",
+      "requireCleanWorkingTree": false,
+      "ensureTagOnRemote": true,
+      "remoteName": "origin"
+    },
+    {
+      "name": "GitHub",
+      "stageLabel": "release",
+      "enabled": true,
+      "githubToken": "GITHUB_MAKS_IT_COM",
+      "repository": "https://github.com/MAKS-IT-COM/maksit-results",
+      "releaseNotesFile": "..\\..\\..\\CHANGELOG.md",
+      "releaseTitlePattern": "Release {version}"
+    },
+    {
+      "name": "DotNetNuGet",
+      "stageLabel": "release",
+      "enabled": true,
+      "nugetApiKey": "NUGET_MAKS_IT",
+      "source": "https://api.nuget.org/v3/index.json"
+    },
+    {
+      "name": "NpmReleaseVersion",
+      "stageLabel": "build",
+      "enabled": false,
+      "packageJsonPath": "..\\..\\..\\src\\package.json",
+      "syncWorkspaceVersions": true
+    },
+    {
+      "name": "NpmBuild",
+      "stageLabel": "build",
+      "enabled": false,
+      "workspaceRoot": "..\\..\\..\\src",
+      "useCi": true,
+      "buildScript": "build"
+    },
+    {
+      "name": "NpmPublish",
+      "stageLabel": "release",
+      "enabled": false,
+      "npmApiKey": "NPMJS_MAKS_IT",
+      "registry": "https://registry.npmjs.org",
+      "access": "public",
+      "workspaceRoot": "..\\..\\..\\src",
+      "publishOrder": [
+        "@scope/example-contracts",
+        "@scope/example-core"
+      ]
+    },
+    {
+      "name": "DotNetDockerPush",
+      "stageLabel": "release",
+      "enabled": false,
+      "registryUrl": "cr.maks-it.com",
+      "credentialsEnvVar": "CR_MAKS_IT",
+      "projectName": "my-service",
+      "contextPath": "..\\..\\..\\src",
+      "pushLatest": true,
+      "images": [
+        {
+          "service": "api",
+          "dockerfile": "MyService.Api/Dockerfile",
+          "versionEnvFiles": [
+            "MyService.WebUI/.env",
+            "MyService.WebUI/.env.prod"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DotNetHelmPush",
+      "stageLabel": "release",
+      "enabled": false,
+      "chartPath": "..\\..\\..\\helm\\my-service",
+      "ociRepository": "oci://cr.maks-it.com/charts",
+      "credentialsEnvVar": "CR_MAKS_IT",
+      "pushLatest": false
+    },
+    {
+      "name": "DotNetCleanupArtifacts",
+      "stageLabel": "release",
+      "enabled": true,
+      "includePatterns": [
+        "*"
+      ],
+      "excludePatterns": [
+        "*.zip"
+      ]
+    }
+  ],
+  "_comments": {
+    "plugins": {
+      "name": "Plugin module name (for example, DotNetPack -> plugins/DotNet/DotNetPack.psm1). Lookup: engines/release/custom, then plugins/Platform, DotNet, Npm.",
+      "stageLabel": "Execution phase: test, qualityGate, build, or release (lowercase). Plugin failures stop the run and report RELEASE FAILED.",
+      "enabled": "If true, the plugin is imported and Invoke-Plugin is called in the configured order.",
+      "DotNetReleaseVersion": "Reads <Version> from the first projectFiles entry; writes shared context version. ReleasePublishGuard checks tag on HEAD matches when tagVersionMustMatchDotNetRelease is true.",
+      "project": "DotNetTest plugin only. Path to one test project directory, relative to the script folder (omit if using projects).",
+      "projects": "DotNetTest plugin only. Array of test project paths relative to the engine folder (engines/release or engines/test). If several projects and resultsDir is omitted, uses TestResults next to the engine script.",
+      "resultsDir": "DotNetTest plugin only. Optional results directory path, relative to the script folder.",
+      "projectFiles": "DotNetReleaseVersion: version source (first .csproj). DotNetPack / QualityGate: which projects to pack or scan (relative to engines/release).",
+      "artifactsDir": "DotNetPack: output directory for packages (relative to engines/release). Engine default artifacts root is ..\\..\\..\\release when omitted here.",
+      "coverageThreshold": "QualityGate: line coverage threshold percent (0 disables). Requires qualityLineCoverage, coverageLineRate, or testResult.LineRate on shared context when > 0.",
+      "scanVulnerabilities": "QualityGate: omit or true to run dotnet list package --vulnerable on projectFiles; false skips (no projectFiles needed).",
+      "failOnVulnerabilities": "QualityGate: when scanVulnerabilities is true, fail if vulnerable packages are found (default true).",
+      "githubToken": "GitHub plugin only. Environment variable name containing the GitHub token used by gh CLI.",
+      "repository": "GitHub plugin only. Optional owner/repo or GitHub remote URL. Leave empty to use remote.origin.url.",
+      "releaseNotesFile": "GitHub plugin: path to CHANGELOG.md (relative to engines/release). Top entry must use Keep a Changelog form ## [semver] - YYYY-MM-DD (parsed by ChangelogSupport).",
+      "releaseTitlePattern": "GitHub plugin only. Release title pattern. Supports {version} placeholder.",
+      "zipNamePattern": "DotNetCreateArchive plugin only. Archive name pattern for packaged release assets. Supports {version} placeholder.",
+      "nugetApiKey": "DotNetNuGet plugin only. Environment variable name containing the NuGet API key.",
+      "source": "DotNetNuGet plugin only. Feed URL passed to dotnet nuget push.",
+      "includePatterns": "DotNetCleanupArtifacts plugin only. File patterns to remove from artifactsDir (for example ['*.nupkg','*.snupkg']).",
+      "excludePatterns": "DotNetCleanupArtifacts plugin only. File patterns to keep even when includePatterns match (for example ['*.zip']).",
+      "registryUrl": "DotNetDockerPush: registry host without scheme.",
+      "credentialsEnvVar": "DotNetDockerPush / DotNetHelmPush: environment variable name whose value is Base64(username:password).",
+      "projectName": "DotNetDockerPush: image path segment after registry.",
+      "contextPath": "DotNetDockerPush: docker build context, relative to engines/release folder.",
+      "pushLatest": "DotNetDockerPush: also push :latest (after bare semver e.g. :3.3.4 and :v3.3.4). DotNetHelmPush: after helm push, oras copy chart to :latest (requires oras CLI on PATH; set false to skip).",
+      "images": "DotNetDockerPush: [{ service, dockerfile, contextPath?, versionEnvFiles? }]. dockerfile and versionEnvFiles are relative to the image contextPath when set, otherwise plugin contextPath.",
+      "versionEnvFiles": "DotNetDockerPush image option. Temporarily replace VITE_APP_VERSION in listed files (relative to the image build context) with shared.version during docker build, then restore original files.",
+      "chartPath": "DotNetHelmPush: directory containing Chart.yaml, relative to engines/release (product repo, e.g. ..\\\\..\\\\..\\\\helm\\\\my-service). Keep version/appVersion as placeholders in git (e.g. 0.0.0); DotNetHelmPush overwrites them with bare semver from DotNetReleaseVersion (shared.version, e.g. 3.3.4, no v) before helm package/push; falls back to stripping v from shared.tag if version is missing.",
+      "ociRepository": "DotNetHelmPush: OCI registry URL for helm push (e.g. oci://cr.maks-it.com/charts).",
+      "branches": "ReleasePublishGuard: allowed branches for publish (omit or [\"*\"] = any). Do not put branches on GitHub/DotNetNuGet/DotNetDockerPush/DotNetHelmPush/NpmPublish.",
+      "requireExactTagOnHead": "ReleasePublishGuard: require git describe --tags --exact-match HEAD (vX.Y.Z).",
+      "tagVersionMustMatchDotNetRelease": "ReleasePublishGuard: tag semver must equal DotNetReleaseVersion when true.",
+      "whenRequirementsNotMet": "ReleasePublishGuard: skip (suppress publish plugins) or fail (exit 1).",
+      "requireCleanWorkingTree": "ReleasePublishGuard: block publish if git status is not clean.",
+      "ensureTagOnRemote": "ReleasePublishGuard: push tag to remoteName if missing.",
+      "remoteName": "ReleasePublishGuard: git remote for tag push (default origin).",
+      "NpmReleaseVersion": "Reads version from packageJsonPath (workspace root package.json). syncWorkspaceVersions aligns packages/*/package.json.",
+      "NpmBuild": "npm ci/install + npm run buildScript in workspaceRoot.",
+      "npmApiKey": "NpmPublish: environment variable name for npm automation token (e.g. NPMJS_MAKS_IT).",
+      "publishOrder": "NpmPublish: workspace package names in dependency order.",
+      "registry": "NpmPublish: npm registry URL (default https://registry.npmjs.org).",
+      "access": "NpmPublish: npm publish --access (default public).",
+      "tagVersionMustMatchReleaseVersion": "ReleasePublishGuard: tag semver must equal NpmReleaseVersion or DotNetReleaseVersion when true.",
+      "tagVersionMustMatchNpmRelease": "ReleasePublishGuard: alias of tagVersionMustMatchReleaseVersion for npm repos."
+    }
+  }
+}
