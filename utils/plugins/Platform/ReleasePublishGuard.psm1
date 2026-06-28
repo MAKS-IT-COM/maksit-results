@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-    Central gate for publish-stage plugins (DotNetDockerPush, DotNetHelmPush, GitHub, DotNetNuGet, NpmPublish).
+    Central gate before remote-mutation plugins (see each plugin's Get-PluginMetadata).
 
 .DESCRIPTION
     Place this plugin immediately before any publish plugins in scriptSettings.json. It sets
@@ -50,10 +50,15 @@ function Invoke-NotMetInternal {
         [string]$Reason
     )
 
-    $Shared | Add-Member -NotePropertyName skipPublishPlugins -NotePropertyValue $true -Force
+    if (Get-Command Set-EngineState -ErrorAction SilentlyContinue) {
+        Set-EngineState -Context $Shared -Name 'skipPublishPlugins' -Value $true
+    }
+    else {
+        $Shared | Add-Member -NotePropertyName skipPublishPlugins -NotePropertyValue $true -Force
+    }
+
     if ($When -eq 'fail') {
-        Write-Log -Level "ERROR" -Message "ReleasePublishGuard: $Reason"
-        exit 1
+        throw "ReleasePublishGuard: $Reason"
     }
 
     Write-Log -Level "WARN" -Message "  Publish suppressed: $Reason"
@@ -67,6 +72,7 @@ function Invoke-Plugin {
 
     Import-PluginDependency -ModuleName "Logging" -RequiredCommand "Write-Log"
     Import-PluginDependency -ModuleName "PluginSupport" -RequiredCommand "Get-PluginBranches"
+    Import-PluginDependency -ModuleName "EngineContext" -RequiredCommand "Set-EngineState"
 
     Import-PluginDependency -ModuleName "GitTools" -RequiredCommand "Get-GitStatusShort"
     Import-PluginDependency -ModuleName "GitTools" -RequiredCommand "Test-RemoteTagExists"
@@ -82,7 +88,7 @@ function Invoke-Plugin {
         throw "ReleasePublishGuard: whenRequirementsNotMet must be 'skip' or 'fail'."
     }
 
-    $shared | Add-Member -NotePropertyName skipPublishPlugins -NotePropertyValue $false -Force
+    Set-EngineState -Context $shared -Name 'skipPublishPlugins' -Value $false
 
     Write-Log -Level "STEP" -Message "Release publish guard..."
 
@@ -138,7 +144,7 @@ function Invoke-Plugin {
             return
         }
 
-        $shared | Add-Member -NotePropertyName tag -NotePropertyValue $tag -Force
+        Set-EngineState -Context $shared -Name 'tag' -Value $tag
     }
 
     $ensureRemote = $true

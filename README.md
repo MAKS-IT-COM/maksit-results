@@ -1,6 +1,8 @@
 # MaksIT.Results
 
-![Line Coverage](assets/badges/coverage-lines.svg) ![Branch Coverage](assets/badges/coverage-branches.svg) ![Method Coverage](assets/badges/coverage-methods.svg)
+![Line Coverage](https://img.shields.io/badge/Line%20Coverage-19.8%25-orange)
+![Branch Coverage](https://img.shields.io/badge/Branch%20Coverage-75%25-green)
+![Method Coverage](https://img.shields.io/badge/Method%20Coverage-19.9%25-orange)
 
 `MaksIT.Results` is a .NET library for modeling operation outcomes as HTTP-aware result objects and converting them to `IActionResult` in ASP.NET Core.
 
@@ -82,6 +84,7 @@ public sealed record UserDto(Guid Id, string Name);
 
 - `Result` success: returns status-code-only response.
 - `Result<T>` success with non-null `Value`: returns JSON body + status code.
+- `Result<T>` success with a redirection status code (300–303, 307–308) and a non-empty string `Value`: returns an HTTP redirect to that URL.
 - Any failure: returns RFC 7807-style `ProblemDetails` JSON with:
   - `status` = result status code
   - `title` = `"An error occurred"`

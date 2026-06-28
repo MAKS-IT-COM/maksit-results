@@ -101,120 +101,31 @@ This project follows [Semantic Versioning](https://semver.org/):
 
 ## Release Process
 
-The release process is automated via PowerShell scripts in the `utils/` directory.
+Orchestration lives in **`utils/`** (from [maksit-repoutils](https://github.com/MAKS-IT-COM/maksit-repoutils)).
 
 ### Prerequisites
 
-- Docker Desktop running (for Linux tests)
-- GitHub CLI (`gh`) installed
-- Environment variables configured:
-  - `NUGET_MAKS_IT` - NuGet.org API key
-  - `GITHUB_MAKS_IT_COM` - GitHub Personal Access Token (needs `repo` scope)
+- .NET SDK, PowerShell 7+, Git, GitHub CLI (`gh`)
+- Environment variables (names match logical secrets in `scriptSettings.json`):
+  - **`GitHub`** — GitHub token (`repo` scope)
+  - **`NuGet`** — NuGet.org API key
 
-### Release Scripts Overview
+| Entry | Purpose |
+|-------|---------|
+| `utils\Invoke-TestEngine.bat` | Tests and coverage badges |
+| `utils\Invoke-ReleasePackage-Single.bat` | Release (build, test, pack, publish) |
+| `utils\Update-RepoUtils.bat` | Sync engines from maksit-repoutils |
+| `utils\Force-AmendTaggedCommit.bat` | Amend last tagged commit |
 
-| Script | Purpose |
-|--------|---------|
-| `Generate-CoverageBadges.ps1` | Runs tests with coverage and generates SVG badges in `assets/badges/` |
-| `Release-Package.ps1` | Build, test, and publish to NuGet.org and GitHub |
-| `Force-AmendTaggedCommit.ps1` | Fix mistakes in tagged commits |
+### Workflow
 
-### Release Workflow
+1. Bump `<Version>` in `src/MaksIT.Results/MaksIT.Results.csproj` and **CHANGELOG.md**
+2. Commit, tag `vX.Y.Z` on `main`
+3. Set `$env:GitHub`, `$env:NuGet`, run `utils\Invoke-ReleasePackage-Single.bat`
 
-1. **Update version** in `MaksIT.Results/MaksIT.Results.csproj`
+Dry-run: `pwsh -File utils\engines\release\Invoke-ReleasePackage.ps1 -DryRun`
 
-2. **Update CHANGELOG.md** with your changes under the target version
-
-3. **Review and commit** all changes:
-   ```bash
-   git add -A
-   git commit -m "(chore): release v2.x.x"
-   ```
-
-4. **Create version tag**:
-   ```bash
-   git tag v2.x.x
-   ```
-
-5. **Run release script**:
-   ```powershell
-   .\utils\Release-Package\Release-Package.ps1          # Full release
-   .\utils\Release-Package\Release-Package.ps1 -DryRun   # Test without publishing
-   ```
-
----
-
-### Generate-CoverageBadges.ps1
-
-Runs tests with coverage and generates SVG badges in `assets/badges/`.
-
-**Usage:**
-```powershell
-.\utils\Generate-CoverageBadges\Generate-CoverageBadges.ps1
-```
-
-**Configuration:** `utils/Generate-CoverageBadges/scriptsettings.json`
-
----
-
-### Release-Package.ps1
-
-Builds, tests, packs, and publishes the package to NuGet.org and GitHub.
-
-**What it does:**
-1. Validates prerequisites and environment
-2. Builds and tests the project
-3. Creates NuGet package (.nupkg and .snupkg)
-4. Pushes to NuGet.org
-5. Creates GitHub release with assets
-
-**Usage:**
-```powershell
-.\utils\Release-Package\Release-Package.ps1          # Full release
-.\utils\Release-Package\Release-Package.ps1 -DryRun  # Test without publishing
-```
-
-**Configuration:** `utils/Release-Package/scriptsettings.json`
-
----
-
-### Force-AmendTaggedCommit.ps1
-
-Fixes mistakes in the last tagged commit by amending it and force-pushing.
-
-**When to use:**
-- You noticed an error after committing and tagging
-- Need to add forgotten files to the release commit
-- Need to fix a typo in the release
-
-**What it does:**
-1. Verifies the last commit has an associated tag
-2. Stages all pending changes
-3. Amends the latest commit (keeps existing message)
-4. Deletes and recreates the tag on the amended commit
-5. Force pushes the branch and tag to origin
-
-**Usage:**
-```powershell
-.\utils\Force-AmendTaggedCommit\Force-AmendTaggedCommit.ps1          # Amend and force push
-.\utils\Force-AmendTaggedCommit\Force-AmendTaggedCommit.ps1 -DryRun   # Preview without changes
-```
-
-**Warning:** This rewrites history. Only use on commits that haven't been pulled by others.
-
----
-
-### Fixing a Failed Release
-
-If the release partially failed (e.g., NuGet succeeded but GitHub failed):
-
-1. **Re-run the release script** if it supports skipping already-completed steps
-2. **If you need to fix the commit content:**
-   ```powershell
-   # Make your fixes, then:
-   .\utils\Force-AmendTaggedCommit\Force-AmendTaggedCommit.ps1
-   .\utils\Release-Package\Release-Package.ps1
-   ```
+Configuration: `utils/engines/release/scriptSettings.json`, `utils/engines/test/scriptSettings.json`
 
 ## License
 

@@ -8,8 +8,7 @@
 .DESCRIPTION
     This script clones the configured repository into a temporary directory,
     refreshes the parent directory of this script, preserves existing
-    scriptSettings.json files in subfolders, and copies the cloned source
-    contents into that parent directory.
+    scriptSettings.json files in subfolders, and copies the cloned source contents into that parent directory.
 
     All configuration is stored in scriptSettings.json.
 
@@ -23,7 +22,9 @@
     - repository.sourceSubdirectory: Folder copied into the target directory
     - repository.preserveFileName: Existing file name to preserve in subfolders
     - repository.cloneDepth: Depth used for git clone
-    - repository.skippedRelativeDirectories: Relative directories to exclude from phase-two refresh
+    - repository.skippedRelativeDirectories: Relative directories to exclude from phase-two refresh (preserve dest)
+    - repository.omittedRelativeDirectories: Relative directories to delete from dest and never copy from source
+      (product repos: ["tests"] — RepoUtils self-tests stay only in maksit-repoutils / enterprise)
 #>
 
 [CmdletBinding()]
@@ -88,6 +89,56 @@ function Test-IsInRelativeDirectory {
     return $false
 }
 
+function Get-ReleaseDeployPreserveFiles {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TargetDirectory
+    )
+
+    return @()
+}
+
+function Add-PreservedFileBackup {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Collections.IList]$PreservedFiles,
+
+        [Parameter(Mandatory = $true)]
+        [System.IO.FileInfo]$File,
+
+        [Parameter(Mandatory = $true)]
+        [string]$TargetDirectory,
+
+        [Parameter(Mandatory = $true)]
+        [string]$TemporaryRoot,
+
+        [Parameter(Mandatory = $true)]
+        [bool]$DryRun
+    )
+
+    $relativePath = [System.IO.Path]::GetRelativePath($TargetDirectory, $File.FullName)
+    foreach ($existing in $PreservedFiles) {
+        if ($existing.RelativePath.Equals($relativePath, [System.StringComparison]::OrdinalIgnoreCase)) {
+            return
+        }
+    }
+
+    $backupPath = Join-Path $TemporaryRoot ("preserved-" + ($relativePath -replace '[\\/:*?""<>|]', '_'))
+    $PreservedFiles.Add([pscustomobject]@{
+            RelativePath = $relativePath
+            BackupPath   = $backupPath
+        }) | Out-Null
+
+    if (-not $DryRun) {
+        $backupDirectory = Split-Path -Parent $backupPath
+        if (-not (Test-Path -Path $backupDirectory -PathType Container)) {
+            New-Item -ItemType Directory -Path $backupDirectory -Force | Out-Null
+        }
+
+        Copy-Item -Path $File.FullName -Destination $backupPath -Force
+    }
+}
+
 #region Import Modules
 
 $scriptConfigModulePath = Join-Path $modulesDir "ScriptConfig.psm1"
@@ -133,6 +184,18 @@ else {
         [System.IO.Path]::Combine('engines', 'release', 'custom'),
         [System.IO.Path]::Combine('engines', 'test', 'custom')
     )
+}
+[string[]]$omittedRelativeDirectories = if ($settings.repository.omittedRelativeDirectories) {
+    @(
+        $settings.repository.omittedRelativeDirectories |
+            ForEach-Object {
+                ConvertTo-NormalizedRelativePath -Path ([string]$_)
+            } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    )
+}
+else {
+    @()
 }
 
 #endregion
@@ -235,32 +298,39 @@ try {
         }
     }
 
-    $preservedFiles = @()
+    $preservedFiles = [System.Collections.ArrayList]@()
     [string[]]$updatePhaseSkippedDirectories = @($skippedRelativeDirectories) + $selfUpdateDirectory
     $existingPreservedFiles = Get-ChildItem -Path $targetDirectory -Recurse -File -Filter $preserveFileName -ErrorAction SilentlyContinue
     if ($existingPreservedFiles) {
         foreach ($file in $existingPreservedFiles) {
-            $relativePath = [System.IO.Path]::GetRelativePath($targetDirectory, $file.FullName)
-            $backupPath = Join-Path $temporaryRoot ("preserved-" + ($relativePath -replace '[\\/:*?""<>|]', '_'))
-            $preservedFiles += [pscustomobject]@{
-                RelativePath = $relativePath
-                BackupPath = $backupPath
-            }
-
-            if (-not $dryRun) {
-                Copy-Item -Path $file.FullName -Destination $backupPath -Force
-            }
+            Add-PreservedFileBackup -PreservedFiles $preservedFiles -File $file -TargetDirectory $targetDirectory -TemporaryRoot $temporaryRoot -DryRun $dryRun
         }
-        Write-Log -Level "OK" -Message "Preserved $($preservedFiles.Count) existing $preserveFileName file(s)"
+        Write-Log -Level "OK" -Message "Preserved $($existingPreservedFiles.Count) existing $preserveFileName file(s)"
     }
     else {
         Write-Log -Level "WARN" -Message "No existing $preserveFileName files found in subfolders"
     }
 
+    $releaseDeployPreserveFiles = @(Get-ReleaseDeployPreserveFiles -TargetDirectory $targetDirectory)
+    if ($releaseDeployPreserveFiles.Count -gt 0) {
+        foreach ($file in $releaseDeployPreserveFiles) {
+            Add-PreservedFileBackup -PreservedFiles $preservedFiles -File $file -TargetDirectory $targetDirectory -TemporaryRoot $temporaryRoot -DryRun $dryRun
+        }
+        Write-Log -Level "OK" -Message "Preserved $($releaseDeployPreserveFiles.Count) release deploy file(s)"
+    }
+
+    $preservedRelativePaths = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($preservedFile in $preservedFiles) {
+        [void]$preservedRelativePaths.Add($preservedFile.RelativePath)
+    }
+
     if ($dryRun) {
         Write-LogStep "Dry run summary"
-        Write-Log -Level "INFO" -Message "Would remove all files under target except preserved $preserveFileName files"
+        Write-Log -Level "INFO" -Message "Would remove all files under target except preserved $preserveFileName and release deploy files"
         Write-Log -Level "INFO" -Message "Would skip phase-two refresh for: $($updatePhaseSkippedDirectories -join ', ')"
+        if ($omittedRelativeDirectories.Count -gt 0) {
+            Write-Log -Level "INFO" -Message "Would omit (delete dest + skip copy): $($omittedRelativeDirectories -join ', ')"
+        }
         Write-Log -Level "INFO" -Message "Would copy refreshed files from: $clonedSourceDirectory"
         if ($preservedFiles.Count -gt 0) {
             $preservedList = ($preservedFiles | ForEach-Object { $_.RelativePath }) -join ", "
@@ -275,9 +345,12 @@ try {
         Where-Object {
             $relativePath = [System.IO.Path]::GetRelativePath($targetDirectory, $_.FullName)
             $isInSkippedDirectory = Test-IsInRelativeDirectory -RelativePath $relativePath -Directories $updatePhaseSkippedDirectories
+            $isInOmittedDirectory = ($omittedRelativeDirectories.Count -gt 0) -and
+                (Test-IsInRelativeDirectory -RelativePath $relativePath -Directories $omittedRelativeDirectories)
 
             $_.Name -ne $preserveFileName -and
-            -not $isInSkippedDirectory
+            -not $preservedRelativePaths.Contains($relativePath) -and
+            (-not $isInSkippedDirectory -or $isInOmittedDirectory)
         }
 
     foreach ($file in $filesToRemove) {
@@ -289,7 +362,10 @@ try {
 
     foreach ($directory in $directoriesToRemove) {
         $relativePath = [System.IO.Path]::GetRelativePath($targetDirectory, $directory.FullName)
-        if (Test-IsInRelativeDirectory -RelativePath $relativePath -Directories $updatePhaseSkippedDirectories) {
+        $isInOmittedDirectory = ($omittedRelativeDirectories.Count -gt 0) -and
+            (Test-IsInRelativeDirectory -RelativePath $relativePath -Directories $omittedRelativeDirectories)
+        if ((Test-IsInRelativeDirectory -RelativePath $relativePath -Directories $updatePhaseSkippedDirectories) -and
+            -not $isInOmittedDirectory) {
             continue
         }
 
@@ -305,8 +381,10 @@ try {
         Where-Object {
             $relativePath = [System.IO.Path]::GetRelativePath($clonedSourceDirectory, $_.FullName)
             $isInSkippedDirectory = Test-IsInRelativeDirectory -RelativePath $relativePath -Directories $updatePhaseSkippedDirectories
+            $isInOmittedDirectory = ($omittedRelativeDirectories.Count -gt 0) -and
+                (Test-IsInRelativeDirectory -RelativePath $relativePath -Directories $omittedRelativeDirectories)
 
-            -not $isInSkippedDirectory
+            -not $isInSkippedDirectory -and -not $isInOmittedDirectory
         }
 
     foreach ($sourceFile in $sourceFilesToCopy) {
@@ -326,6 +404,9 @@ try {
             Write-Log -Level "INFO" -Message "Skipped refresh for $skippedDirectory"
         }
     }
+    foreach ($omittedDirectory in $omittedRelativeDirectories) {
+        Write-Log -Level "INFO" -Message "Omitted (not shipped): $omittedDirectory"
+    }
     Write-Log -Level "OK" -Message "Source files copied"
 
     if ($preservedFiles.Count -gt 0) {
@@ -342,7 +423,7 @@ try {
 
             Copy-Item -Path $preservedFile.BackupPath -Destination $restorePath -Force
         }
-        Write-Log -Level "OK" -Message "$preserveFileName files restored"
+        Write-Log -Level "OK" -Message "Preserved files restored ($($preservedFiles.Count))"
     }
 
     Write-Log -Level "OK" -Message "========================================"
