@@ -78,13 +78,24 @@ public partial class Result<T> : Result {
   /// <returns>IActionResult that represents the HTTP response.</returns>
   public override IActionResult ToActionResult() {
     if (IsSuccess) {
-      if (Value is not null) {
+      if (IsRedirectionStatusCode(StatusCode) && Value is string location && !string.IsNullOrWhiteSpace(location))
+        return new RedirectResult(location);
+
+      if (Value is not null)
         return new ObjectResult(Value) { StatusCode = (int)StatusCode };
-      }
+
       return base.ToActionResult();
     }
     else {
       return base.ToActionResult();
     }
   }
+
+  private static bool IsRedirectionStatusCode(HttpStatusCode statusCode) =>
+      statusCode is HttpStatusCode.MultipleChoices
+          or HttpStatusCode.MovedPermanently
+          or HttpStatusCode.Found
+          or HttpStatusCode.SeeOther
+          or HttpStatusCode.TemporaryRedirect
+          or HttpStatusCode.PermanentRedirect;
 }

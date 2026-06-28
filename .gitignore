@@ -263,3 +263,7 @@ __pycache__/
 
 # Custom
 ![Uu]tils/**
+
+# Generated test reports (RepoUtils)
+test-results/
+utils/tests/results/

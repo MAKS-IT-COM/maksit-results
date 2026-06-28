@@ -11,6 +11,9 @@
     "skippedRelativeDirectories": [
       "engines/release/custom",
       "engines/test/custom"
+    ],
+    "omittedRelativeDirectories": [
+      "tests"
     ]
   }
 }

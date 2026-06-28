@@ -45,4 +45,15 @@ public class ResultToActionResultTests {
     Assert.Equal((int)HttpStatusCode.OK, objectResult.StatusCode);
     Assert.Equal(value, objectResult.Value);
   }
+  
+  [Fact]
+  public void ToActionResult_WhenGenericSuccessWithRedirect_ReturnsRedirectResult() {
+    var result = Result<string>.Found("https://example.com/continue");
+
+    var actionResult = result.ToActionResult();
+
+    Assert.IsType<RedirectResult>(actionResult);
+    var redirectResult = (RedirectResult)actionResult;
+    Assert.Equal("https://example.com/continue", redirectResult.Location);
+  }
 }

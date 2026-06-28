@@ -2,9 +2,6 @@
   "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Run Tests Script Settings",
   "description": "Template: plugin-driven tests and coverage badges. Product repos override this file via Update-RepoUtils preserve.",
-  "paths": {
-    "badgesDir": "..\\..\\..\\assets\\badges"
-  },
   "plugins": [
     {
       "name": "DotNetTest",
@@ -12,7 +9,8 @@
       "enabled": true,
       "projects": [
         "..\\..\\..\\src\\MaksIT.Results.Tests"
-      ]
+      ],
+      "resultsDir": "..\\..\\..\\test-results"
     },
     {
       "name": "QualityGate",
@@ -25,20 +23,18 @@
       "name": "CoverageBadges",
       "stageLabel": "report",
       "enabled": true,
-      "badgesDir": "..\\..\\..\\assets\\badges",
+      "badgeFormat": "shields",
+      "readmePath": "..\\..\\..\\README.md",
       "badges": [
         {
-          "name": "coverage-lines.svg",
           "label": "Line Coverage",
           "metric": "line"
         },
         {
-          "name": "coverage-branches.svg",
           "label": "Branch Coverage",
           "metric": "branch"
         },
         {
-          "name": "coverage-methods.svg",
           "label": "Method Coverage",
           "metric": "method"
         }
@@ -53,12 +49,8 @@
       }
     }
   ],
-  "_comments": {
-    "plugins": {
-      "DotNetTest": "Runs dotnet test with Coverlet for one or more test projects (project/projects).",
-      "NpmJestTest": "Alternative for npm/Jest repos: workspaceRoot, testScript, coverageDirectory.",
-      "QualityGate": "Reads shared context metrics; set coverageThreshold > 0 to enforce minimum line coverage.",
-      "CoverageBadges": "Writes SVG badges from shared context metrics into badgesDir."
-    }
+  "paths": {
+    "readmePath": "..\\..\\..\\README.md",
+    "testResultsDir": "..\\..\\..\\test-results"
   }
 }
