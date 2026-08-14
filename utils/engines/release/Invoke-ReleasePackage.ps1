@@ -80,8 +80,9 @@ else {
             }
         }
 
-        $pluginSucceeded = Invoke-ConfiguredPlugin -Plugin $plugin -SharedSettings $sharedPluginSettings -EngineDirectory $PSScriptRoot -ContinueOnError:$false
-        if (-not $pluginSucceeded) {
+        $pluginSucceeded = Invoke-ConfiguredPlugin -Plugin $plugin -SharedSettings $sharedPluginSettings -EngineDirectory $PSScriptRoot
+        # Exact $true only: polluted arrays (CLI stdout + $false) are truthy under -not.
+        if ($pluginSucceeded -ne $true) {
             $releaseHadPluginFailures = $true
             break
         }
