@@ -2,6 +2,8 @@
   "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Release Package Script Settings",
   "description": "Invoke-ReleasePackage.ps1 plugin settings. Place ReleasePublishGuard before GitHub/DotNetNuGet/DockerImagePush/HelmPush/NpmPublish; use its branches and tag rules. Publish plugins omit per-plugin branches. Semver comes from DotNetReleaseVersion (projectFiles).",
+  "repoUtilsSecretsShared": "RepoUtilsSecretsShared",
+  "repoUtilsSecrets": "RepoUtilsSecrets",
   "plugins": [
     {
       "name": "DotNetReleaseVersion",
@@ -61,7 +63,7 @@
       "name": "GitHub",
       "stageLabel": "release",
       "enabled": true,
-      "githubSecret": "GitHub",
+      "githubSecret": "GitClone",
       "repository": "https://github.com/MAKS-IT-COM/maksit-results",
       "releaseNotesFile": "..\\..\\..\\CHANGELOG.md",
       "releaseTitlePattern": "Release {version}"
@@ -102,7 +104,7 @@
       ]
     },
     {
-      "name": "DotNetCleanupArtifacts",
+      "name": "CleanupArtifacts",
       "stageLabel": "release",
       "enabled": true,
       "includePatterns": [

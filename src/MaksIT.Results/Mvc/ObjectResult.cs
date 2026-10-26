@@ -15,10 +15,7 @@ public class ObjectResult(object? value) : IActionResult {
 
   public async Task ExecuteResultAsync(ActionContext context) {
     var response = context.HttpContext.Response;
-
-    // Prefer app-configured JSON options (from AddJsonOptions), fall back to default
-    var jsonOptions = context.HttpContext.RequestServices?.GetService<IOptions<JsonOptions>>()?.Value?.JsonSerializerOptions
-      ?? _jsonSerializerOptions;
+    var jsonOptions = ResolveJsonSerializerOptions(context.HttpContext.RequestServices);
 
     if (StatusCode.HasValue) {
       response.StatusCode = StatusCode.Value;
@@ -40,5 +37,17 @@ public class ObjectResult(object? value) : IActionResult {
         jsonOptions
       );
     }
+  }
+
+  /// <summary>
+  /// Ignore unconfigured <see cref="JsonOptions"/> from options DI (Pascal case defaults).
+  /// Use camel case unless the host set <see cref="JsonSerializerOptions.PropertyNamingPolicy"/>.
+  /// </summary>
+  private static JsonSerializerOptions ResolveJsonSerializerOptions(IServiceProvider? services) {
+    var configured = services?.GetService<IOptions<JsonOptions>>()?.Value?.JsonSerializerOptions;
+    if (configured?.PropertyNamingPolicy is not null)
+      return configured;
+
+    return _jsonSerializerOptions;
   }
 }

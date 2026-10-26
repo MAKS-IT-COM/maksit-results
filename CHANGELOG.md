@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.5] - 2026-10-26
+
+### Fixed
+- `ObjectResult` no longer serializes with Pascal case when `IOptions<MaksIT.Results.Mvc.JsonOptions>` is unconfigured. Options DI always supplies that type; its default `JsonSerializerOptions` have no naming policy. Unconfigured hosts now keep the camel-case fallback (same as `AddControllers().AddJsonOptions`).
+
+### Changed
+- Updated ASP.NET Core and Microsoft.Extensions package references.
+- **Tests:** migrate to **xunit.v3** **4.0** + **Microsoft Testing Platform** only (`src/global.json` `test.runner` next to the `.slnx`; no VSTest / **coverlet.collector** / **Microsoft.NET.Test.Sdk** / **xunit.runner.visualstudio**). Use **coverlet.MTP**; **TestRunner** always uses `--coverlet` (scoped to **`[MaksIT.*]*`**).
+- Synced repository utilities: plugin dependency resolution, release/test engine updates, coverage collection, and vault support; documented MTP test flow in `CONTRIBUTING.md`.
+
 ## [2.0.4] - 2026-08-14
 
 ### Changed

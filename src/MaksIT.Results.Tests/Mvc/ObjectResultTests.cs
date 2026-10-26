@@ -29,6 +29,29 @@ public class ObjectResultTests {
   }
 
   [Fact]
+  public async Task ExecuteResultAsync_WhenJsonOptionsUnconfigured_UsesCamelCase() {
+    var services = new ServiceCollection();
+    services.AddOptions<JsonOptions>();
+    var serviceProvider = services.BuildServiceProvider();
+
+    var testObject = new TestPascalCase { FirstName = "John", LastName = "Doe" };
+    var objectResult = new ObjectResult(testObject);
+    var context = new DefaultHttpContext { RequestServices = serviceProvider };
+    var memoryStream = new MemoryStream();
+    context.Response.Body = memoryStream;
+    var actionContext = new ActionContext { HttpContext = context };
+
+    await objectResult.ExecuteResultAsync(actionContext);
+
+    memoryStream.Seek(0, SeekOrigin.Begin);
+    var json = await new StreamReader(memoryStream).ReadToEndAsync(TestContext.Current.CancellationToken);
+    Assert.Contains("\"firstName\"", json);
+    Assert.Contains("\"lastName\"", json);
+    Assert.DoesNotContain("\"FirstName\"", json);
+    Assert.DoesNotContain("\"LastName\"", json);
+  }
+
+  [Fact]
   public async Task ExecuteResultAsync_WhenJsonOptionsWhenWritingNull_OmitsNullProperties() {
     var services = new ServiceCollection();
     services.AddOptions<JsonOptions>().Configure(o => {

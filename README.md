@@ -1,8 +1,8 @@
 # MaksIT.Results
 
-![Line Coverage](https://img.shields.io/badge/Line%20Coverage-19.8%25-orange)
-![Branch Coverage](https://img.shields.io/badge/Branch%20Coverage-75%25-green)
-![Method Coverage](https://img.shields.io/badge/Method%20Coverage-19.9%25-orange)
+![Line Coverage](https://img.shields.io/badge/Line%20Coverage-18.4%25-orange)
+![Branch Coverage](https://img.shields.io/badge/Branch%20Coverage-76.3%25-green)
+![Method Coverage](https://img.shields.io/badge/Method%20Coverage-12.8%25-orange)
 
 `MaksIT.Results` is a .NET library for modeling operation outcomes as HTTP-aware result objects and converting them to `IActionResult` in ASP.NET Core.
 

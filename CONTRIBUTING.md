@@ -26,6 +26,8 @@ dotnet build MaksIT.Results.slnx
 
 ### Running Tests
 
+Preferred: `utils\Invoke-TestEngine.bat` (DotNetTest → QualityGate → CoverageBadges). Tests run under **Microsoft Testing Platform** (`src/global.json` `test.runner` next to the `.slnx`) with **xunit.v3** and **coverlet.MTP**.
+
 ```bash
 cd src
 dotnet test MaksIT.Results.Tests
@@ -101,14 +103,15 @@ This project follows [Semantic Versioning](https://semver.org/):
 
 ## Release Process
 
-Orchestration lives in **`utils/`** (from [maksit-repoutils](https://github.com/MAKS-IT-COM/maksit-repoutils)).
+Orchestration lives in **`utils/`** (from [maksit-repoutils](https://git.maks-it.com/MAKS-IT/maksit-repoutils)).
 
 ### Prerequisites
 
 - .NET SDK, PowerShell 7+, Git, GitHub CLI (`gh`)
-- Environment variables (names match logical secrets in `scriptSettings.json`):
-  - **`GitHub`** — GitHub token (`repo` scope)
-  - **`NuGet`** — NuGet.org API key
+- Environment variables (JSON packs; names declared in `scriptSettings.json` as `repoUtilsSecretsShared` / `repoUtilsSecrets`):
+  - **`RepoUtilsSecretsShared`** — org-pack JSON (e.g. `NuGet` slot)
+  - **`RepoUtilsSecrets`** — slug-pack JSON (e.g. `GitClone` slot for GitHub releases)
+- Plugin settings such as `githubSecret` / `nugetSecret` name pack **slots**, not env var names.
 
 | Entry | Purpose |
 |-------|---------|
@@ -120,8 +123,8 @@ Orchestration lives in **`utils/`** (from [maksit-repoutils](https://github.com/
 ### Workflow
 
 1. Bump `<Version>` in `src/MaksIT.Results/MaksIT.Results.csproj` and **CHANGELOG.md**
-2. Commit, tag `vX.Y.Z` on `main`
-3. Set `$env:GitHub`, `$env:NuGet`, run `utils\Invoke-ReleasePackage-Single.bat`
+2. Commit, tag `v{version}` on `main` (`v1.2.3` or SemVer prerelease such as `v0.1.0-alpha.1`, `v0.1.0-beta.1`, `v0.1.0-rc.1`). GitHub marks hyphenated versions as prerelease.
+3. Ensure `RepoUtilsSecretsShared` / `RepoUtilsSecrets` are set (User or process env), run `utils\Invoke-ReleasePackage-Single.bat`
 
 Dry-run: `pwsh -File utils\engines\release\Invoke-ReleasePackage.ps1 -DryRun`
 
