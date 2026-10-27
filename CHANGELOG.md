@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.6] - 2026-10-27
+
+### Changed
+- NuGet publish workflow: bump `actions/checkout` and `actions/setup-dotnet` to v5; use NuGet.org username `maks-it`.
+
 ## [2.0.5] - 2026-10-26
 
 ### Fixed
