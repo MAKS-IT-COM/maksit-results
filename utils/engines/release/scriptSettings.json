@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
   "title": "Release Package Script Settings",
-  "description": "Invoke-ReleasePackage.ps1 plugin settings. Place ReleasePublishGuard before GitHub/DotNetNuGet/DockerImagePush/HelmPush/NpmPublish; use its branches and tag rules. Publish plugins omit per-plugin branches. Semver comes from DotNetReleaseVersion (projectFiles).",
+  "description": "Invoke-ReleasePackage.ps1 plugin settings. Place ReleasePublishGuard before GitHub/DockerImagePush/HelmPush/NpmPublish; use its branches and tag rules. Publish plugins omit per-plugin branches. Semver comes from DotNetReleaseVersion (projectFiles).",
   "repoUtilsSecretsShared": "RepoUtilsSecretsShared",
   "repoUtilsSecrets": "RepoUtilsSecrets",
   "plugins": [
@@ -67,41 +67,6 @@
       "repository": "https://github.com/MAKS-IT-COM/maksit-results",
       "releaseNotesFile": "..\\..\\..\\CHANGELOG.md",
       "releaseTitlePattern": "Release {version}"
-    },
-    {
-      "name": "DotNetNuGet",
-      "stageLabel": "release",
-      "enabled": true,
-      "nugetSecret": "NuGet",
-      "source": "https://api.nuget.org/v3/index.json"
-    },
-    {
-      "name": "NpmReleaseVersion",
-      "stageLabel": "build",
-      "enabled": false,
-      "packageJsonPath": "..\\..\\..\\src\\package.json",
-      "syncWorkspaceVersions": true
-    },
-    {
-      "name": "NpmBuild",
-      "stageLabel": "build",
-      "enabled": false,
-      "workspaceRoot": "..\\..\\..\\src",
-      "useCi": true,
-      "buildScript": "build"
-    },
-    {
-      "name": "NpmPublish",
-      "stageLabel": "release",
-      "enabled": false,
-      "npmSecret": "Npm",
-      "registry": "https://registry.npmjs.org",
-      "access": "public",
-      "workspaceRoot": "..\\..\\..\\src",
-      "publishOrder": [
-        "@scope/example-contracts",
-        "@scope/example-core"
-      ]
     },
     {
       "name": "CleanupArtifacts",
