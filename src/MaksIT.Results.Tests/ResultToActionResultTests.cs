@@ -1,5 +1,4 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc;
 using MaksIT.Results.Mvc;
 
 namespace MaksIT.Results.Tests;
@@ -11,8 +10,8 @@ public class ResultToActionResultTests {
 
     var actionResult = result.ToActionResult();
 
-    Assert.IsType<StatusCodeResult>(actionResult);
-    var statusCodeResult = (StatusCodeResult)actionResult;
+    var statusCodeResult = Assert.IsType<StatusCodeResult>(actionResult);
+
     Assert.Equal((int)HttpStatusCode.OK, statusCodeResult.StatusCode);
   }
 
@@ -23,11 +22,12 @@ public class ResultToActionResultTests {
 
     var actionResult = result.ToActionResult();
 
-    Assert.IsType<ObjectResult>(actionResult);
-    var objectResult = (ObjectResult)actionResult;
+    var objectResult = Assert.IsType<ObjectResult>(actionResult);
+
     Assert.Equal((int)HttpStatusCode.BadRequest, objectResult.StatusCode);
-    Assert.IsType<ProblemDetails>(objectResult.Value);
-    var problemDetails = (ProblemDetails)objectResult.Value!;
+
+    var problemDetails = Assert.IsType<ProblemDetails>(objectResult.Value);
+
     Assert.Equal((int)HttpStatusCode.BadRequest, problemDetails.Status);
     Assert.Equal("An error occurred", problemDetails.Title);
     Assert.Equal(errorMessage, problemDetails.Detail);
@@ -40,20 +40,21 @@ public class ResultToActionResultTests {
 
     var actionResult = result.ToActionResult();
 
-    Assert.IsType<ObjectResult>(actionResult);
-    var objectResult = (ObjectResult)actionResult;
+    var objectResult = Assert.IsType<ObjectResult>(actionResult);
+
     Assert.Equal((int)HttpStatusCode.OK, objectResult.StatusCode);
     Assert.Equal(value, objectResult.Value);
   }
-  
+
   [Fact]
   public void ToActionResult_WhenGenericSuccessWithRedirect_ReturnsRedirectResult() {
     var result = Result<string>.Found("https://example.com/continue");
 
     var actionResult = result.ToActionResult();
 
-    Assert.IsType<RedirectResult>(actionResult);
-    var redirectResult = (RedirectResult)actionResult;
+    var redirectResult = Assert.IsType<RedirectResult>(actionResult);
+
     Assert.Equal("https://example.com/continue", redirectResult.Location);
+    Assert.Equal((int)HttpStatusCode.Found, redirectResult.StatusCode);
   }
 }

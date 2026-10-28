@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MaksIT.Results.Mvc;
 
-
 namespace MaksIT.Results;
 
 public partial class Result {
@@ -12,7 +11,7 @@ public partial class Result {
 
   protected Result(bool isSuccess, List<string> messages, HttpStatusCode statusCode) {
     IsSuccess = isSuccess;
-    Messages = messages ?? new List<string>();
+    Messages = messages ?? [];
     StatusCode = statusCode;
   }
 
@@ -20,9 +19,8 @@ public partial class Result {
   /// Converts the current Result{T} to a non-generic Result.
   /// </summary>
   /// <returns>A non-generic Result object.</returns>
-  public Result ToResult() {
-    return new Result(IsSuccess, Messages, StatusCode);
-  }
+  public Result ToResult() =>
+    new (IsSuccess, Messages, StatusCode);
 
   /// <summary>
   /// Converts this Result into a Result of another type while retaining the same success status, messages, and status code.
@@ -30,9 +28,8 @@ public partial class Result {
   /// <typeparam name="U">The target type for the Result.</typeparam>
   /// <param name="value">The new value of type U for the converted Result.</param>
   /// <returns>A Result of type U.</returns>
-  public Result<U?> ToResultOfType<U>(U? value) {
-    return new Result<U?>(value, IsSuccess, Messages, StatusCode);
-  }
+  public Result<U?> ToResultOfType<U>(U? value) =>
+    new(value, IsSuccess, Messages, StatusCode);
 
   /// <summary>
   /// Converts the current Result to an IActionResult.
@@ -49,18 +46,15 @@ public partial class Result {
         Detail = string.Join("; ", Messages),
         Instance = null // You can customize the instance URI if needed
       };
+      
       return new ObjectResult(problemDetails) { StatusCode = (int)StatusCode };
     }
   }
 }
 
-public partial class Result<T> : Result {
-  public T? Value { get; }
-
-  public Result(T? value, bool isSuccess, List<string> messages, HttpStatusCode statusCode)
-      : base(isSuccess, messages, statusCode) {
-    Value = value;
-  }
+public partial class Result<T>(T? value, bool isSuccess, List<string> messages, HttpStatusCode statusCode)
+    : Result(isSuccess, messages, statusCode) {
+  public T? Value { get; } = value;
 
   /// <summary>
   /// Converts this Result<T> to a Result<U> while retaining success status, messages, and status code.
@@ -68,9 +62,8 @@ public partial class Result<T> : Result {
   /// <typeparam name="U">The target type for the Result.</typeparam>
   /// <param name="newValueFunc">A function to transform the current value to a new value of type U.</param>
   /// <returns>A Result<U> containing the transformed value.</returns>
-  public Result<U?> ToResultOfType<U>(Func<T?, U?> newValueFunc) {
-    return new Result<U?>(newValueFunc(Value), IsSuccess, Messages, StatusCode);
-  }
+  public Result<U?> ToResultOfType<U>(Func<T?, U?> newValueFunc) =>
+    new (newValueFunc(Value), IsSuccess, Messages, StatusCode);
 
   /// <summary>
   /// Converts the current Result<T> to an IActionResult.
@@ -79,7 +72,7 @@ public partial class Result<T> : Result {
   public override IActionResult ToActionResult() {
     if (IsSuccess) {
       if (IsRedirectionStatusCode(StatusCode) && Value is string location && !string.IsNullOrWhiteSpace(location))
-        return new RedirectResult(location);
+        return new RedirectResult(location, (int)StatusCode);
 
       if (Value is not null)
         return new ObjectResult(Value) { StatusCode = (int)StatusCode };
@@ -90,12 +83,4 @@ public partial class Result<T> : Result {
       return base.ToActionResult();
     }
   }
-
-  private static bool IsRedirectionStatusCode(HttpStatusCode statusCode) =>
-      statusCode is HttpStatusCode.MultipleChoices
-          or HttpStatusCode.MovedPermanently
-          or HttpStatusCode.Found
-          or HttpStatusCode.SeeOther
-          or HttpStatusCode.TemporaryRedirect
-          or HttpStatusCode.PermanentRedirect;
 }

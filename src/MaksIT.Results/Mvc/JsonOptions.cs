@@ -1,4 +1,3 @@
-
 using System.Text.Json;
 
 namespace MaksIT.Results.Mvc;

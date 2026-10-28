@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-10-28
+
+### Added
+- `Result.FromActionResult` / `Result<T>.FromActionResult` - reverse of `ToActionResult` for MaksIT MVC result types.
+- `Result.FromHttpResponseAsync` / `Result<T>.FromHttpResponseAsync` - parse HTTP responses in the `ToActionResult` wire shape (JSON, redirect `Location`, `ProblemDetails`).
+- Package reference to `MaksIT.Core` for JSON helpers used by the HTTP parse path.
+
+### Changed
+- `RedirectResult` accepts an explicit status code; default remains 302 Found.
+- README rewritten around the service <-> API <-> client round-trip (`ToActionResult` / `FromActionResult` / `FromHttpResponseAsync`).
+- Pruned unused RepoUtils plugins so `utils/plugins` matches the enabled list in `scriptSettings.json`.
+- Stopped packaging local `assets/badges` copies; coverage badges remain shields.io URLs in the README.
+
+### Fixed
+- `RedirectResult` now sets `StatusCode` and `Location` instead of always using `Response.Redirect` (302).
+- `Result<T>.ToActionResult` passes the result status into `RedirectResult`.
+
 ## [2.0.6] - 2026-10-27
 
 ### Changed

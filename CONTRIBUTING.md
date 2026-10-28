@@ -26,7 +26,7 @@ dotnet build MaksIT.Results.slnx
 
 ### Running Tests
 
-Preferred: `utils\Invoke-TestEngine.bat` (DotNetTest → QualityGate → CoverageBadges). Tests run under **Microsoft Testing Platform** (`src/global.json` `test.runner` next to the `.slnx`) with **xunit.v3** and **coverlet.MTP**.
+Preferred: `utils\Invoke-TestEngine.bat` (DotNetTest -> QualityGate -> CoverageBadges). Tests run under **Microsoft Testing Platform** (`src/global.json` `test.runner` next to the `.slnx`) with **xunit.v3** and **coverlet.MTP**.
 
 ```bash
 cd src

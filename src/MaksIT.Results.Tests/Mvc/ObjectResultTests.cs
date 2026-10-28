@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using MaksIT.Results.Mvc;
 
 namespace MaksIT.Results.Tests.Mvc;
